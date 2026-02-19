@@ -2,7 +2,7 @@
 
 #if defined(_WIN32)
     #define FAY_OS_WINDOWS 1
-#elif defined(__linux__) && !defined(__ANDROID__)
+#elif defined(__linux__)
     #define FAY_OS_LINUX 1
 #else
     #error "Unsupported OS"

@@ -1,5 +1,6 @@
 set_xmakever("3.0.5")
-add_rules("mode.debug", "mode.release", "mode.releasedbg")
+add_rules("mode.debug", "mode.release", 
+        "mode.releasedbg", "mode.profile")
 
 set_project("Fay")
 set_version("0.0.1", { build = "%Y%m%d%H%M" })
@@ -23,6 +24,13 @@ add_repositories("MyRepo https://github.com/ArnavMehta3000/xmake-repo.git")
 add_requires("nvrhi")
 add_requires("libsdl3 v3.4.0", { alias = "sdl3" })
 
+if is_mode("profile") then 
+    add_defines("FAY_ENABLE_PROFILING=1")
+    add_requires("tracy v0.13.1")
+else
+    add_defines("FAY_ENABLE_PROFILING=0")
+end
+
 if is_plat("linux") then
     set_toolchains("clang")
 elseif is_plat("windows") then
@@ -33,6 +41,10 @@ target("Fay")
     set_kind("binary")
 
     add_packages("nvrhi", "sdl3")
+
+    if is_mode("profile") then
+        add_packages("tracy")
+    end
 	
 	add_includedirs("Fay", { public = true })
     add_files("Fay/**.cpp")
