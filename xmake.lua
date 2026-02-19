@@ -23,7 +23,13 @@ add_repositories("MyRepo https://github.com/ArnavMehta3000/xmake-repo.git")
 add_requires("nvrhi")
 add_requires("libsdl3 v3.4.0", { alias = "sdl3" })
 
-target("fay")
+if is_plat("linux") then
+    set_toolchains("clang")
+elseif is_plat("windows") then
+    set_toolchains("msvc")
+end
+
+target("Fay")
     set_kind("binary")
 
     add_packages("nvrhi", "sdl3")
