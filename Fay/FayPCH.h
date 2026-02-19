@@ -10,3 +10,4 @@
 
 #include "Common/Types.h"
 #include "Common/Log.h"
+#include "Common/Macros.h"
