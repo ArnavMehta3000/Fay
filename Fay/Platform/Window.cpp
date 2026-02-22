@@ -31,7 +31,7 @@ namespace fay
 			flags);
 		
 		Assert(m_window);
-		fay::Log::Info("Window created successfully!");
+		Log::Info("Window created successfully!");
     }
 
 	Window::~Window()
@@ -56,19 +56,30 @@ namespace fay
 			switch (e.type)
 			{
 			case SDL_EVENT_QUIT:
-				fay::Log::Info("Window received quit event");
+				Log::Info("Window received quit event");
 				m_isRunning = false;
 				break;
 
 			case SDL_EVENT_WINDOW_RESIZED:
-				m_desc.Size = { e.window.data1, e.window.data2 };
-				fay::Log::Info("Window received resize ({}x{}) event", 
-					m_desc.Size.first, m_desc.Size.second);
+				m_desc.Size = { static_cast<u32>(e.window.data1), static_cast<u32>(e.window.data2) };
+				m_hasSizeChanged = true;
+				Log::Info("Window received resize ({}x{}) event", m_desc.Size.first, m_desc.Size.second);
 				break;
 			}
 		}
 
 		return m_isRunning;
+	}
+
+	bool Window::HasSizeChanged()
+	{
+		if (m_hasSizeChanged)
+		{
+			m_hasSizeChanged = false;
+			return true;
+		}
+
+		return false;
 	}
 
 #if FAY_OS_WINDOWS

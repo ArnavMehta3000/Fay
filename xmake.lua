@@ -1,5 +1,5 @@
 set_xmakever("3.0.5")
-add_rules("mode.debug", "mode.release", 
+add_rules("mode.debug", "mode.release",
         "mode.releasedbg", "mode.profile")
 
 set_project("Fay")
@@ -21,12 +21,12 @@ add_tests("CompileSuccess", { build_should_pass = true, group = "Compilation" })
 -- For nvrhi
 add_repositories("MyRepo https://github.com/ArnavMehta3000/xmake-repo.git")
 
-add_requires("nvrhi")
-add_requires("libsdl3 v3.4.0", { alias = "sdl3" })
+add_requires("nvrhi", { configs = { validation = true, vulkan = true, d3d12 = true } })
+add_requires("libsdl3", { alias = "sdl3" })
+add_requires("tracy v0.13.1")
 
-if is_mode("profile") then 
+if is_mode("profile") then
     add_defines("FAY_ENABLE_PROFILING=1")
-    add_requires("tracy v0.13.1")
 else
     add_defines("FAY_ENABLE_PROFILING=0")
 end
@@ -40,16 +40,15 @@ end
 target("Fay")
     set_kind("binary")
 
-    add_packages("nvrhi", "sdl3")
+    add_packages("nvrhi", "sdl3", "tracy")
 
-    if is_mode("profile") then
-        add_packages("tracy")
-    end
-	
 	add_includedirs("Fay", { public = true })
     add_files("Fay/**.cpp")
     add_headerfiles("Fay/**.h")
 
     set_pcxxheader("Fay/FayPCH.h")
-	add_forceincludes("Fay/FayPCH.h", { public = true })
+
+    if is_plat("windows") then
+        add_links("dxgi")  -- Other links handled by nvrhi
+    end
 target_end()

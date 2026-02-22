@@ -10,7 +10,7 @@ namespace fay
         struct Desc
         {
             std::string Name         = "Fay Renderer";
-            std::pair<i32, i32> Size = { 1280, 720 };
+            std::pair<u32, u32> Size = { 1280, 720 };
             bool  IsResizeable       = true;
 
 			static Desc Default() { return Desc{}; }
@@ -21,8 +21,10 @@ namespace fay
         ~Window();
 
 		bool PumpEvents();
+        bool HasSizeChanged();
 
 		[[nodiscard]] inline SDL_Window* GetSDL() const { return m_window; }
+        [[nodiscard]] inline std::pair<u32, u32> GetSize() const { return m_desc.Size; }
 	
 	#if FAY_OS_WINDOWS
 		void* GetHWND() const;
@@ -34,5 +36,6 @@ namespace fay
         SDL_Window* m_window;
         Desc m_desc;
 		bool m_isRunning;
+        bool m_hasSizeChanged;
     };
 }
