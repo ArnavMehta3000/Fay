@@ -1,4 +1,5 @@
 #include "Platform/Window.h"
+#include "Common/Log.h"
 #include "Common/Assert.h"
 #include "Common/Profiling.h"
 #include <SDL3/SDL.h>

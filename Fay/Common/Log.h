@@ -1,4 +1,6 @@
 #pragma once
+#include <print>
+#include <format>
 
 namespace fay
 {

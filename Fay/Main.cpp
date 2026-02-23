@@ -3,6 +3,7 @@
 #include "Common/Profiling.h"
 #include "Graphics/RendererBase.h"
 #include <nvrhi/utils.h>
+#include <memory>
 
 static nvrhi::GraphicsAPI GetPlatformAPI()
 {

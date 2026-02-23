@@ -1,4 +1,5 @@
 #include "Graphics/RendererBase.h"
+#include "Common/Log.h"
 #include "Common/Assert.h"
 #include "Platform/Window.h"
 #include "Common/Profiling.h"

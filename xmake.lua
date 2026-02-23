@@ -47,7 +47,7 @@ target("Fay")
     add_files("Fay/**.cpp")
     add_headerfiles("Fay/**.h")
 
-    set_pcxxheader("Fay/FayPCH.h")
+    -- set_pcxxheader("Fay/FayPCH.h")  -- This causes more problems than it helps
 
     if is_plat("windows") then
         add_links("dxgi")  -- Other links handled by nvrhi

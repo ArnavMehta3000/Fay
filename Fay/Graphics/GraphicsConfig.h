@@ -1,4 +1,5 @@
 #pragma once
+#include "Common/Macros.h"
 
 #if FAY_OS_WINDOWS
 	#define FAY_HAS_D3D 1

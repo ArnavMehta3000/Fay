@@ -1,4 +1,6 @@
 #pragma once
+#include <string>
+#include "Common/Types.h"
 
 struct SDL_Window;
 

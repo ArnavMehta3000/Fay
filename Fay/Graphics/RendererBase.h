@@ -2,7 +2,9 @@
 #include <optional>
 #include <variant>
 #include <functional>
+#include <list>
 #include <nvrhi/nvrhi.h>
+#include "Common/Types.h"
 #include "Graphics/GraphicsConfig.h"
 
 #if FAY_HAS_D3D
@@ -39,6 +41,7 @@ namespace fay
         nvrhi::Format DepthBufferFormat = nvrhi::Format::UNKNOWN;  // If unkown, then depth buffer is not created
 
         std::pair<u32, u32> BackBufferSize = { 0, 0 };
+        u32 MaxFramesInFlight              = 2;
         u32 RefreshRate                    = 0;
         u32 SwapChainBufferCount           = 3;
         u32 SwapChainSampleCount           = 1;
@@ -50,6 +53,11 @@ namespace fay
 #endif
 
 #if FAY_HAS_VULKAN
+        std::vector<std::string> RequiredVulkanInstanceExtensions;
+        std::vector<std::string> RequiredVulkanLayers;
+        std::vector<std::string> OptionalVulkanInstanceExtensions;
+        std::vector<std::string> OptionalVulkanLayers;
+
         std::vector<std::string> RequiredVulkanDeviceExtensions;
         std::vector<std::string> OptionalVulkanDeviceExtensions;
         std::vector<size_t> IgnoredVulkanValidationMessageLocations = { 0x13365b2 };

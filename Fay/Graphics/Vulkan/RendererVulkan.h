@@ -1,6 +1,9 @@
 #pragma once
 #include "Graphics/GraphicsConfig.h"
+
 #if FAY_HAS_VULKAN
+#include <queue>
+#include <memory>
 #include "Graphics/RendererBase.h"
 #include <vulkan/vulkan.hpp>
 #include <nvrhi/vulkan.h>
@@ -20,7 +23,6 @@ namespace fay
 		u32 GetCurrentBackBufferIndex() const override;
 		u32 GetBackBufferCount() const override;
 		void ReportLiveObjects() override;
-		void Shutdown() override;
 
 	protected:
 		bool CreateDeviceIndependentResources() override;
@@ -34,7 +36,12 @@ namespace fay
 	private:
 		void InstallDebugCallback();
 		bool PickPhysicalDevice();
+		bool CreateDeviceInteral();
 		bool FindQueueFamilies(vk::PhysicalDevice physicalDevice);
+		bool CreateWindowSurface();
+		void DestroySwapChain();
+		bool CreateSwapChainInternal();
+		bool CreateInstance();
 
 	private:
 #if VK_HEADER_VERSION >= 301
