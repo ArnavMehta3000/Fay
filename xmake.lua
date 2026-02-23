@@ -1,4 +1,4 @@
-set_xmakever("3.0.5")
+set_xmakever("3.0.7")
 add_rules("mode.debug", "mode.release",
         "mode.releasedbg", "mode.profile")
 
@@ -12,6 +12,7 @@ set_warnings("all", "extra")
 
 set_policy("build.warning", true)
 set_policy("run.autobuild", true)
+set_policy("package.install_locally", true)
 
 add_rules("plugin.compile_commands.autoupdate", {outputdir = ".vscode", lsp = "clangd"})
 
