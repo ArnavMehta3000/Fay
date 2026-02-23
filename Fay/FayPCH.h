@@ -7,6 +7,7 @@
 
 #include <array>
 #include <vector>
+#include <queue>
 #include <unordered_map>
 
 #include "Common/Types.h"

@@ -4,6 +4,15 @@
 #include "Graphics/RendererBase.h"
 #include <nvrhi/utils.h>
 
+static nvrhi::GraphicsAPI GetPlatformAPI()
+{
+#if FAY_HAS_D3D
+	return nvrhi::GraphicsAPI::D3D12;
+#else
+	return nvrhi::GraphicsAPI::VULKAN;
+#endif
+}
+
 
 class ClearPass : public fay::IRenderPass
 {
@@ -35,11 +44,11 @@ private:
     nvrhi::CommandListHandle m_cmdList;
 };
 
-void Run()
+static void Run()
 {
     fay::Window window(fay::Window::Desc::Default());
 
-    std::unique_ptr<fay::Renderer> renderer(fay::Renderer::Create(nvrhi::GraphicsAPI::D3D12));
+    std::unique_ptr<fay::Renderer> renderer(fay::Renderer::Create(GetPlatformAPI()));
 
     fay::RendererInitInfo info{};
     info.DepthBufferFormat = nvrhi::Format::D32;
@@ -78,7 +87,6 @@ void Run()
 
 int main()
 {
-
     Run();
 
     return 0;

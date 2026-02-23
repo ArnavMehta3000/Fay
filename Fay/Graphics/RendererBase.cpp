@@ -1,18 +1,30 @@
 #include "Graphics/RendererBase.h"
-#include "Graphics/DX12/RendererDX12.h"
-#include "Platform/Window.h"
 #include "Common/Assert.h"
+#include "Platform/Window.h"
+#include "Common/Profiling.h"
 #include <nvrhi/utils.h>
+
+#if FAY_HAS_D3D
+#include "Graphics/DX12/RendererDX12.h"
+#endif
+
+#if FAY_HAS_VULKAN
+#include "Graphics/Vulkan/RendererVulkan.h"
+#endif
 
 namespace fay
 {
 	Renderer* Renderer::Create(nvrhi::GraphicsAPI api)
 	{
+		ZoneScoped;
 		switch (api)
 		{
+#if FAY_HAS_D3D
 		case nvrhi::GraphicsAPI::D3D12: return new RendererDX12();
-		case nvrhi::GraphicsAPI::D3D11:
-		case nvrhi::GraphicsAPI::VULKAN:
+#endif
+#if FAY_HAS_VULKAN
+		case nvrhi::GraphicsAPI::VULKAN: return new RendererVulkan();
+#endif
 		default:
 			nvrhi::utils::NotSupported();
 			return nullptr;
@@ -21,6 +33,7 @@ namespace fay
 
 	bool Renderer::Init(const RendererInitInfo& info, Window& targetWindow)
 	{
+		ZoneScoped;
 		m_window = &targetWindow;
 		m_initInfo = info;
 
@@ -52,6 +65,7 @@ namespace fay
 
 	void Renderer::Shutdown()
 	{
+		ZoneScoped;
 		m_swapChainFrameBuffers.clear();
 		m_swapChainWithDepthFrameBuffers.clear();
 		m_depthBuffer = nullptr;
@@ -63,6 +77,7 @@ namespace fay
 
 	void Renderer::Resize()
 	{
+		ZoneScoped;
 		Assert(m_window);
 		auto [width, height] = m_window->GetSize();
 
@@ -91,6 +106,7 @@ namespace fay
 
 	nvrhi::IFramebuffer* Renderer::GetFrameBuffer(u32 index, bool withDepth)
 	{
+		ZoneScoped;
 		if (withDepth && index < m_swapChainWithDepthFrameBuffers.size())
 		{
 			return m_swapChainWithDepthFrameBuffers[index];
@@ -111,6 +127,7 @@ namespace fay
 
 	void Renderer::DoRenderPasses()
 	{
+		ZoneScoped;
 		for (IRenderPass* pass : m_renderPasses)
 		{
 			nvrhi::IFramebuffer* buffer = GetCurrentFrameBuffer(pass->SupportsDepthBuffer());
@@ -120,6 +137,7 @@ namespace fay
 
 	bool Renderer::PostRender()
 	{
+		ZoneScoped;
 		if (!Present())
 		{
 			Log::Error("Present failed!");
@@ -140,6 +158,7 @@ namespace fay
 
 	void Renderer::AddRenderPassToFront(IRenderPass* renderPass)
 	{
+		ZoneScoped;
 		m_renderPasses.remove(renderPass);
 		m_renderPasses.push_front(renderPass);
 
@@ -150,6 +169,7 @@ namespace fay
 
 	void Renderer::AddRenderPassToBack(IRenderPass* renderPass)
 	{
+		ZoneScoped;
 		m_renderPasses.remove(renderPass);
 		m_renderPasses.push_back(renderPass);
 
@@ -160,11 +180,13 @@ namespace fay
 
 	void Renderer::RemoveRenderPass(IRenderPass* renderPass)
 	{
+		ZoneScoped;
 		m_renderPasses.remove(renderPass);
 	}
 
 	bool Renderer::CreateInstance()
 	{
+		ZoneScoped;
 		if (m_instanceCreated)
 		{
 			return true;
@@ -175,6 +197,7 @@ namespace fay
 
 	void Renderer::BackBufferResizeBegin()
 	{
+		ZoneScoped;
 		// Clear swapchain buffers
 		m_swapChainFrameBuffers.clear();
 		m_swapChainWithDepthFrameBuffers.clear();
@@ -187,6 +210,7 @@ namespace fay
 
 	void Renderer::BackBufferResizeEnd()
 	{
+		ZoneScoped;
 		CreateDepthBuffer();
 
 		auto& [width, height] = m_initInfo.BackBufferSize;
@@ -220,6 +244,7 @@ namespace fay
 
 	void Renderer::CreateDepthBuffer()
 	{
+		ZoneScoped;
 		m_depthBuffer = nullptr;
 
 		if (m_initInfo.DepthBufferFormat == nvrhi::Format::UNKNOWN)

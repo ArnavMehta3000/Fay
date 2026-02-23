@@ -1,6 +1,9 @@
 #include "Graphics/DX12/RendererDX12.h"
+
+#if FAY_HAS_D3D
 #include "Platform/Window.h"
 #include "Common/Assert.h"
+#include "Common/Profiling.h"
 #include <nvrhi/validation.h>
 #include <dxgidebug.h>
 
@@ -18,14 +21,9 @@ extern "C"
 
 namespace fay
 {
-    std::wstring RendererDX12::GetAdapterName(const DXGI_ADAPTER_DESC& desc)
-    {
-        
-        return desc.Description;
-    }
-
 	bool RendererDX12::EnumerateAdapters(std::vector<AdapterInfo>& outAdapters)
 	{
+        ZoneScoped;
 		if (!m_dxgiFactory)
 		{
 			return false;
@@ -50,7 +48,7 @@ namespace fay
 
 			AdapterInfo adapterInfo
 			{
-				.Name                 = GetAdapterName(desc),
+				.Name                 = std::wstring(desc.Description),
 				.VendorID             = desc.VendorId,
 				.DeviceID             = desc.DeviceId,
 				.DedicatedVideoMemory = desc.DedicatedVideoMemory,
@@ -90,6 +88,7 @@ namespace fay
 
     void RendererDX12::ReportLiveObjects()
     {
+        ZoneScoped;
         nvrhi::RefCountPtr<IDXGIDebug> debug;
         if (SUCCEEDED(::DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug))))
         {
@@ -111,6 +110,7 @@ namespace fay
 
     void RendererDX12::Shutdown()
     {
+        ZoneScoped;
         Renderer::Shutdown();
 
         m_dxgiAdapter = nullptr;
@@ -124,6 +124,7 @@ namespace fay
 
     bool RendererDX12::CreateDeviceIndependentResources()
     {
+        ZoneScoped;
         if (!m_dxgiFactory)
         {
             const u32 flags = m_initInfo.EnableDebugRuntime ? DXGI_CREATE_FACTORY_DEBUG : 0;
@@ -139,6 +140,7 @@ namespace fay
 
     bool RendererDX12::CreateDevice()
     {
+        ZoneScoped;
         // Check for debug layer
         if (m_initInfo.EnableDebugRuntime)
         {
@@ -271,6 +273,7 @@ namespace fay
 
     bool RendererDX12::CreateSwapChain()
     {
+        ZoneScoped;
         Assert(m_window);
         HWND hWnd = static_cast<HWND>(m_window->GetHWND());
         Assert(hWnd);
@@ -290,8 +293,8 @@ namespace fay
         switch (m_initInfo.SwapChainFormat)
         {
             using enum nvrhi::Format;
-        case SRGBA8_UNORM: m_swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;                                break;
-        case SBGRA8_UNORM: m_swapChainDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;                                break;
+        case SRGBA8_UNORM: m_swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; break;
+        case SBGRA8_UNORM: m_swapChainDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM; break;
         default: m_swapChainDesc.Format = nvrhi::d3d12::convertFormat(m_initInfo.SwapChainFormat); break;
         }
 
@@ -310,12 +313,12 @@ namespace fay
             m_swapChainDesc.Flags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
         }
 
-        m_fullScreenDesc = {};
-        m_fullScreenDesc.RefreshRate.Numerator = m_initInfo.RefreshRate;
+        m_fullScreenDesc                         = {};
+        m_fullScreenDesc.RefreshRate.Numerator   = m_initInfo.RefreshRate;
         m_fullScreenDesc.RefreshRate.Denominator = 1;
-        m_fullScreenDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE;
-        m_fullScreenDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-        m_fullScreenDesc.Windowed = TRUE;  // NOTE: Handle fullscreening eventually here
+        m_fullScreenDesc.ScanlineOrdering        = DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE;
+        m_fullScreenDesc.Scaling                 = DXGI_MODE_SCALING_UNSPECIFIED;
+        m_fullScreenDesc.Windowed                = TRUE;  // NOTE: Handle fullscreening eventually here
 
         nvrhi::RefCountPtr<IDXGISwapChain1> swapChain1;
         HR_RETURN(m_dxgiFactory->CreateSwapChainForHwnd(m_graphicsQueue, hWnd, &m_swapChainDesc, &m_fullScreenDesc, nullptr, &swapChain1));
@@ -339,6 +342,7 @@ namespace fay
 
     void RendererDX12::DestroyDeviceAndSwapChain()
     {
+        ZoneScoped;
         m_rhiSwapChainBuffers.clear();
         m_rendererString.clear();
 
@@ -371,6 +375,7 @@ namespace fay
 
     void RendererDX12::ResizeSwapChain()
     {
+        ZoneScoped;
         ReleaseRenderTargets();
 
         if (!m_nvrhiDevice || !m_swapChain)
@@ -399,8 +404,9 @@ namespace fay
 
     bool RendererDX12::BeginFrame()
     {
-        // NOTE: Could handle checking if swapchain windowed state has changed to trigger resize of needed
+        ZoneScoped;
 
+        // NOTE: Could handle checking if swapchain windowed state has changed to trigger resize of needed
         u32 bufferIndex = m_swapChain->GetCurrentBackBufferIndex();
         ::WaitForSingleObject(m_frameFenceEvents[bufferIndex], INFINITE);
 
@@ -409,6 +415,7 @@ namespace fay
 
     bool RendererDX12::Present()
     {
+        ZoneScoped;
         u32 bufferIndex = m_swapChain->GetCurrentBackBufferIndex();
 
         u32 presentFlags = 0;
@@ -430,6 +437,7 @@ namespace fay
     {
         using namespace std::string_literals;
 
+        ZoneScoped;
         m_swapChainBuffers.resize(m_swapChainDesc.BufferCount);
         m_rhiSwapChainBuffers.resize(m_swapChainDesc.BufferCount);
 
@@ -461,6 +469,7 @@ namespace fay
 
     void RendererDX12::ReleaseRenderTargets()
     {
+        ZoneScoped;
         if (m_nvrhiDevice)
         {
             m_nvrhiDevice->waitForIdle();
@@ -478,3 +487,4 @@ namespace fay
 }
 
 #undef HR_RETURN
+#endif

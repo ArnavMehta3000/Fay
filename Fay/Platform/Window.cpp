@@ -10,6 +10,7 @@ namespace fay
         : m_window(nullptr)
 		, m_desc(desc)
 		, m_isRunning(true)
+		, m_hasSizeChanged(false)
     {
 		ZoneScoped;
 		if (SDL_Init(SDL_INIT_VIDEO) == false)

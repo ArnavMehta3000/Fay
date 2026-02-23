@@ -1,4 +1,7 @@
 #pragma once
+#include "Graphics/GraphicsConfig.h"
+
+#if FAY_HAS_D3D
 #include "Graphics/RendererBase.h"
 #include <nvrhi/d3d12.h>
 
@@ -50,7 +53,8 @@ namespace fay
 		std::vector<HANDLE>                             m_frameFenceEvents;
 		u64                                             m_frameCount = 1;
 		nvrhi::DeviceHandle                             m_nvrhiDevice;
-		std::wstring                                     m_rendererString;
+		std::wstring                                    m_rendererString;
 		bool                                            m_isTearingSupported = false;
 	};
 }
+#endif

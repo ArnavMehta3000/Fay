@@ -1,8 +1,21 @@
 #pragma once
 #include <optional>
+#include <variant>
+#include <functional>
 #include <nvrhi/nvrhi.h>
+#include "Graphics/GraphicsConfig.h"
+
+#if FAY_HAS_D3D
 #include <d3dcommon.h>
 #include <dxgi1_6.h>
+#endif
+
+#if FAY_HAS_VULKAN
+#ifndef VULKAN_HPP_DISPATCH_LOADER_DYNAMIC
+#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
+#endif
+#include <vulkan/vulkan.hpp>
+#endif
 
 namespace fay
 {
@@ -20,6 +33,7 @@ namespace fay
         bool EnableComputeQueue         : 1 = false;
         bool EnableCopyQueue            : 1 = false;
         bool EnableVSync                : 1 = false;
+        bool EnableRayTracingExtensions : 1 = false;  // Only affects Vulkan
 
         nvrhi::Format SwapChainFormat = nvrhi::Format::SRGBA8_UNORM;
         nvrhi::Format DepthBufferFormat = nvrhi::Format::UNKNOWN;  // If unkown, then depth buffer is not created
@@ -30,8 +44,17 @@ namespace fay
         u32 SwapChainSampleCount           = 1;
         u32 SwapChainSampleQuality         = 0;
 
+#if FAY_HAS_D3D
         DXGI_USAGE SwapChainUsage = DXGI_USAGE_SHADER_INPUT | DXGI_USAGE_RENDER_TARGET_OUTPUT;
         D3D_FEATURE_LEVEL FeatureLevel = D3D_FEATURE_LEVEL_11_1;
+#endif
+
+#if FAY_HAS_VULKAN
+        std::vector<std::string> RequiredVulkanDeviceExtensions;
+        std::vector<std::string> OptionalVulkanDeviceExtensions;
+        std::vector<size_t> IgnoredVulkanValidationMessageLocations = { 0x13365b2 };
+        std::function<void(VkDeviceCreateInfo&)> VkDeviceCreateInfoCallback;
+#endif
 	};
 
     struct AdapterInfo
@@ -39,7 +62,8 @@ namespace fay
         using AdapterUUID = std::array<u8, 16>;
         using AdapterLUID = std::array<u8, 8>;
 
-        std::wstring Name;
+        // Annoying variant trick cause Windows is quirly like that
+        std::variant<std::wstring, std::string> Name;
         u32 VendorID = 0;
         u32 DeviceID = 0;
         u64 DedicatedVideoMemory = 0;
@@ -47,7 +71,13 @@ namespace fay
         std::optional<AdapterUUID> UUID;
         std::optional<AdapterLUID> LUID;
 
+#if FAY_HAS_D3D
         nvrhi::RefCountPtr<IDXGIAdapter> DXGIAdapter;
+#endif
+
+#if FAY_HAS_VULKAN
+        VkPhysicalDevice vkPhysicalDevice = nullptr;
+#endif
     };
 
     class IRenderer
