@@ -49,7 +49,7 @@ static void Run()
 {
     fay::Window window(fay::Window::Desc::Default());
 
-    std::unique_ptr<fay::Renderer> renderer(fay::Renderer::Create(GetPlatformAPI()));
+    std::unique_ptr<fay::Renderer> renderer(fay::Renderer::Create(nvrhi::GraphicsAPI::VULKAN));
 
     fay::RendererInitInfo info{};
     info.DepthBufferFormat = nvrhi::Format::D32;

@@ -12,8 +12,6 @@ namespace fay
 	public:
 		RendererDX12() {}
 
-		std::wstring GetAdapterName(const DXGI_ADAPTER_DESC& desc);
-
 		bool EnumerateAdapters(std::vector<AdapterInfo>& outAdapters) override;
 		inline std::wstring_view GetRendererName() const override { return m_rendererString; }
 		inline nvrhi::IDevice* GetDevice() const override { return m_nvrhiDevice; }

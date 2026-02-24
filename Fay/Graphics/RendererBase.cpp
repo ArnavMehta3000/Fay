@@ -38,6 +38,8 @@ namespace fay
 		m_window = &targetWindow;
 		m_initInfo = info;
 
+		m_initInfo.BackBufferSize = m_window->GetSize();
+
 		if (!CreateInstance())
 		{
 			Log::Error("Failed to create renderer instance!");
@@ -148,11 +150,11 @@ namespace fay
 		GetDevice()->runGarbageCollection();
 		++m_frameIndex;
 
-		if (!GetDevice()->waitForIdle())
-		{
-			Log::Error("Wait for idle failed!");
-			return false;
-		}
+		//if (!GetDevice()->waitForIdle())
+		//{
+		//	Log::Error("Wait for idle failed!");
+		//	return false;
+		//}
 
 		return true;
 	}

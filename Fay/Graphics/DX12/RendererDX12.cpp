@@ -4,6 +4,7 @@
 #include "Platform/Window.h"
 #include "Common/Assert.h"
 #include "Common/Profiling.h"
+#include "Common/Log.h"
 #include <nvrhi/validation.h>
 #include <dxgidebug.h>
 
@@ -188,7 +189,7 @@ namespace fay
         {
             DXGI_ADAPTER_DESC aDesc;
             m_dxgiAdapter->GetDesc(&aDesc);
-            m_rendererString = GetAdapterName(aDesc);
+            m_rendererString = aDesc.Description;
         }
 
         if (FAILED(::D3D12CreateDevice(m_dxgiAdapter, m_initInfo.FeatureLevel, IID_PPV_ARGS(&m_device))))

@@ -5,6 +5,7 @@
 #include <list>
 #include <nvrhi/nvrhi.h>
 #include "Common/Types.h"
+#include "Common/Macros.h"
 #include "Graphics/GraphicsConfig.h"
 
 #if FAY_HAS_D3D

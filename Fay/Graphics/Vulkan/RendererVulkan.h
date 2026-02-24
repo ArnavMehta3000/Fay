@@ -2,10 +2,11 @@
 #include "Graphics/GraphicsConfig.h"
 
 #if FAY_HAS_VULKAN
+#define VK_USE_PLATFORM_WIN32_KHR
 #include <queue>
 #include <memory>
+#include <unordered_set>
 #include "Graphics/RendererBase.h"
-#include <vulkan/vulkan.hpp>
 #include <nvrhi/vulkan.h>
 
 namespace fay
@@ -13,7 +14,7 @@ namespace fay
 	class RendererVulkan final : public Renderer
 	{
 	public:
-		RendererVulkan() {};
+		RendererVulkan();
 
 		bool EnumerateAdapters(std::vector<AdapterInfo>& outAdapters) override;
 		inline std::wstring_view GetRendererName() const override { return m_rendererString; }
@@ -55,6 +56,13 @@ namespace fay
 			nvrhi::TextureHandle NvrhiHandle;
 		};
 
+		struct VulkanExtensionSet
+		{
+			std::unordered_set<std::string> Instance;
+			std::unordered_set<std::string> Layers;
+			std::unordered_set<std::string> Device;
+		};
+
 		std::wstring                         m_rendererString;
 		vk::Instance                         m_vkInstance;
 		vk::DebugReportCallbackEXT           m_debugReportCallback;
@@ -83,6 +91,10 @@ namespace fay
 		bool                                 m_swapChainMutableFormatSupported = false;
 		bool                                 m_bufferDeviceAddressSupported = false;
 		std::unique_ptr<VulkanDynamicLoader> m_dynamicLoader;
+
+		VulkanExtensionSet m_enabledExtensions;
+		VulkanExtensionSet m_optionalExtensions;
+		std::unordered_set<std::string> m_rayTracingExtensions;
 	};
 }
 #endif

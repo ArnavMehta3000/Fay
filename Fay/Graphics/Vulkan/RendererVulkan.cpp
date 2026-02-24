@@ -1,7 +1,6 @@
 #include "Graphics/Vulkan/RendererVulkan.h"
 
 #if FAY_HAS_VULKAN
-#include <unordered_set>
 #include <sstream>
 #include <numeric>
 #include "Common/Assert.h"
@@ -10,9 +9,10 @@
 #include "Platform/Window.h"
 #include <nvrhi/validation.h>
 #include <SDL3/SDL_vulkan.h>
-#include "RendererVulkan.h"
 
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
+#undef min
+#undef max
 
 #define CHECK(x) if (!(x)) { return false; }
 
@@ -22,64 +22,6 @@ namespace fay
 	static constexpr u32 s_graphicsQueueIndex = 0;
 	static constexpr u32 s_presentQueueIndex  = 0;
 	static constexpr u32 s_transferQueueIndex = 0;
-
-	struct VulkanExtensionSet
-	{
-		std::unordered_set<std::string> Instance;
-		std::unordered_set<std::string> Layers;
-		std::unordered_set<std::string> Device;
-	};
-
-#pragma region Vulkan Extensions
-	// minimal set of required extensions
-	VulkanExtensionSet g_enabledExtensions =
-	{
-		// instance
-		{
-			VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
-		},
-		// layers
-		{ },
-		// device
-		{
-			VK_KHR_MAINTENANCE1_EXTENSION_NAME
-		},
-	};
-
-	// optional extensions
-	VulkanExtensionSet g_optionalExtensions =
-	{
-		// instance
-		{
-			VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
-			VK_EXT_SAMPLER_FILTER_MINMAX_EXTENSION_NAME,
-		},
-		// layers
-		{ },
-		// device
-		{
-			VK_EXT_DEBUG_MARKER_EXTENSION_NAME,
-			VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
-			VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
-			VK_KHR_FRAGMENT_SHADING_RATE_EXTENSION_NAME,
-			VK_KHR_MAINTENANCE_4_EXTENSION_NAME,
-			VK_KHR_SWAPCHAIN_MUTABLE_FORMAT_EXTENSION_NAME,
-			VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
-			VK_EXT_MESH_SHADER_EXTENSION_NAME,
-			VK_EXT_MUTABLE_DESCRIPTOR_TYPE_EXTENSION_NAME,
-		},
-	};
-
-	std::unordered_set<std::string> g_rayTracingExtensions =
-	{
-		VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
-		VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
-		VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME,
-		VK_KHR_RAY_QUERY_EXTENSION_NAME,
-		VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
-		VK_NV_CLUSTER_ACCELERATION_STRUCTURE_EXTENSION_NAME
-	};
-#pragma endregion
 
 
 	static VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugCallback(
@@ -103,7 +45,7 @@ namespace fay
 			}
 		}
 
-		Log::Warn("[Vulkan: location={:x} code={}, layerPrefix='{}'] %s", location, code, layerPrefix, msg);
+		Log::Warn("[Vulkan: location={:x} code={}, layerPrefix='{}'] {}", location, code, layerPrefix, msg);
 
 		return VK_FALSE;
 	}
@@ -129,6 +71,56 @@ namespace fay
 		}
 
 		return ret;
+	}
+
+	RendererVulkan::RendererVulkan()
+	{
+		m_enabledExtensions =
+		{
+			// instance
+			{
+				VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
+			},
+			// layers
+			{ },
+			// device
+			{
+				VK_KHR_MAINTENANCE1_EXTENSION_NAME
+			},
+		};
+
+		m_optionalExtensions =
+		{
+			// instance
+			{
+				VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+				VK_EXT_SAMPLER_FILTER_MINMAX_EXTENSION_NAME,
+			},
+			// layers
+			{ },
+			// device
+			{
+				VK_EXT_DEBUG_MARKER_EXTENSION_NAME,
+				VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
+				VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
+				VK_KHR_FRAGMENT_SHADING_RATE_EXTENSION_NAME,
+				VK_KHR_MAINTENANCE_4_EXTENSION_NAME,
+				VK_KHR_SWAPCHAIN_MUTABLE_FORMAT_EXTENSION_NAME,
+				VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
+				VK_EXT_MESH_SHADER_EXTENSION_NAME,
+				VK_EXT_MUTABLE_DESCRIPTOR_TYPE_EXTENSION_NAME,
+			},
+		};
+
+		m_rayTracingExtensions =
+		{
+			VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
+			VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
+			VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME,
+			VK_KHR_RAY_QUERY_EXTENSION_NAME,
+			VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
+			VK_NV_CLUSTER_ACCELERATION_STRUCTURE_EXTENSION_NAME
+		};
 	}
 
 	bool RendererVulkan::EnumerateAdapters(std::vector<AdapterInfo>& outAdapters)
@@ -214,6 +206,10 @@ namespace fay
         return u32(m_swapChainImages.size());
     }
 
+	void RendererVulkan::ReportLiveObjects()
+	{
+	}
+
     void RendererVulkan::InstallDebugCallback()
 	{
 		using enum vk::DebugReportFlagBitsEXT;
@@ -250,7 +246,7 @@ namespace fay
 
 			errorStream << std::endl << prop.deviceName.data() << ":";
 
-			std::unordered_set<std::string> requiredExtensions = g_enabledExtensions.Device;
+			std::unordered_set<std::string> requiredExtensions = m_enabledExtensions.Device;
 			auto deviceExtensions = dev.enumerateDeviceExtensionProperties();
 
 			for (const vk::ExtensionProperties& ext : deviceExtensions)
@@ -432,27 +428,16 @@ namespace fay
 				}
 			}
 
-			if (m_presentQueueFamily == -1)
+			if (m_presentQueueFamily == -1 && m_windowSurface)
 			{
-				VkSurfaceKHR surface{};
-				if (m_window->CreateVulkanSurface(m_vkInstance, &surface))
+				for (u32 idx = 0; idx < (u32)props.size(); ++idx)
 				{
-					[[maybe_unused]] u32 presentQueueFamily = std::numeric_limits<u32>::max();
-					for (u32 idx = 0; idx < queueFamily.queueCount; ++idx)
+					VkBool32 supported = VK_FALSE;
+					vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, idx, m_windowSurface, &supported);
+					if (supported)
 					{
-						VkBool32 supported = VK_FALSE;
-
-						vkGetPhysicalDeviceSurfaceSupportKHR(
-							physicalDevice,
-							idx,
-							surface,
-							&supported);
-
-						if (supported)
-						{
-							presentQueueFamily = idx;
-							break;
-						}
+						m_presentQueueFamily = idx;
+						break;
 					}
 				}
 			}
@@ -470,14 +455,19 @@ namespace fay
 
 	bool RendererVulkan::CreateDevice()
 	{
+		if (m_initInfo.EnableDebugRuntime)
+		{
+			InstallDebugCallback();
+		}
+
 		for (const std::string& name : m_initInfo.RequiredVulkanDeviceExtensions)
 		{
-			g_enabledExtensions.Device.insert(name);
+			m_enabledExtensions.Device.insert(name);
 		}
 
 		for (const std::string& name : m_initInfo.OptionalVulkanDeviceExtensions)
 		{
-			g_optionalExtensions.Device.insert(name);
+			m_optionalExtensions.Device.insert(name);
 		}
 
 		if (m_initInfo.SwapChainFormat == nvrhi::Format::SRGBA8_UNORM)
@@ -494,11 +484,11 @@ namespace fay
 		CHECK(FindQueueFamilies(m_vkPhysicalDevice))
 		CHECK(CreateDeviceInteral())
 
-		auto vecInstanceExt = StringSetToVector(g_enabledExtensions.Instance);
-		auto vecLayers      = StringSetToVector(g_enabledExtensions.Layers);
-		auto vecDeviceExt   = StringSetToVector(g_enabledExtensions.Device);
+		auto vecInstanceExt = StringSetToVector(m_enabledExtensions.Instance);
+		auto vecLayers      = StringSetToVector(m_enabledExtensions.Layers);
+		auto vecDeviceExt   = StringSetToVector(m_enabledExtensions.Device);
 
-		nvrhi::vulkan::DeviceDesc desc{};
+		nvrhi::vulkan::DeviceDesc desc;
 		desc.errorCB            = this;
 		desc.instance           = m_vkInstance;
 		desc.physicalDevice     = m_vkPhysicalDevice;
@@ -524,6 +514,14 @@ namespace fay
 		desc.numDeviceExtensions          = vecDeviceExt.size();
 		desc.bufferDeviceAddressSupported = m_bufferDeviceAddressSupported;
 		desc.logBufferLifetime            = m_initInfo.LogBufferLifetime;
+		desc.vulkanLibraryName            = "";
+		
+		m_nvrhiDevice = nvrhi::vulkan::createDevice(desc);
+
+		if (m_initInfo.EnableNVRHIValidationLayer)
+		{
+			m_validationLayer = nvrhi::validation::createValidationLayer(m_nvrhiDevice);
+		}
 
 		return true;
 	}
@@ -535,23 +533,23 @@ namespace fay
 		for (const auto& ext : deviceExtensions)
 		{
 			const std::string name = ext.extensionName;
-			if (g_optionalExtensions.Device.find(name) != g_optionalExtensions.Device.end())
+			if (m_optionalExtensions.Device.find(name) != m_optionalExtensions.Device.end())
 			{
 				if (name == VK_KHR_SWAPCHAIN_MUTABLE_FORMAT_EXTENSION_NAME)
 				{
 					continue;
 				}
 
-				g_enabledExtensions.Device.insert(name);
+				m_enabledExtensions.Device.insert(name);
 			}
 
-			if (m_initInfo.EnableRayTracingExtensions && g_rayTracingExtensions.find(name) != g_rayTracingExtensions.end())
+			if (m_initInfo.EnableRayTracingExtensions && m_rayTracingExtensions.find(name) != m_rayTracingExtensions.end())
 			{
-				g_enabledExtensions.Device.insert(name);
+				m_enabledExtensions.Device.insert(name);
 			}
 		}
 
-		g_enabledExtensions.Device.insert(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+		m_enabledExtensions.Device.insert(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
 
 		const vk::PhysicalDeviceProperties physicalDeviceProperties = m_vkPhysicalDevice.getProperties();
@@ -573,7 +571,7 @@ namespace fay
 
 		Log::Info("Enabled Vulkan device extensions:");
 
-		for (const auto& ext : g_enabledExtensions.Device)
+		for (const auto& ext : m_enabledExtensions.Device)
 		{
 			Log::Info("    {}", ext.c_str());
 
@@ -711,7 +709,7 @@ namespace fay
 			.setScalarBlockLayout(true)
 			.setPNext(&vulkan11features);
 
-		auto extVec = StringSetToVector(g_enabledExtensions.Device);
+		auto extVec = StringSetToVector(m_enabledExtensions.Device);
 
 		auto deviceDesc = vk::DeviceCreateInfo()
 			.setPQueueCreateInfos(queueDesc.data())
@@ -745,8 +743,6 @@ namespace fay
 
 		m_vkDevice.getQueue(m_presentQueueFamily, s_presentQueueIndex, &m_presentQueue);
 
-		VULKAN_HPP_DEFAULT_DISPATCHER.init(m_vkDevice);
-
 		m_bufferDeviceAddressSupported = vulkan12features.bufferDeviceAddress;
 		Log::Info("Created vulkan device!");
 
@@ -755,9 +751,9 @@ namespace fay
 
 	bool RendererVulkan::CreateWindowSurface()
     {
-		if (!m_window->CreateVulkanSurface(m_vkInstance, &m_windowSurface))
+		if (!m_window->CreateVulkanSurface(&m_vkInstance, &m_windowSurface))
 		{
-			Log::Error("Failed to create a valid window surface!");
+			Log::Error("Failed to create a valid window surface! ErrorCode: {}", SDL_GetError());
 			return false;
 		}
 		return true;
@@ -873,8 +869,8 @@ namespace fay
 	{
 		if (m_initInfo.EnableDebugRuntime)
 		{
-			g_enabledExtensions.Instance.insert("VK_EXT_debug_report");
-        	g_enabledExtensions.Layers.insert("VK_LAYER_KHRONOS_validation");
+			m_enabledExtensions.Instance.insert("VK_EXT_debug_report");
+        	m_enabledExtensions.Layers.insert("VK_LAYER_KHRONOS_validation");
 		}
 
 		m_dynamicLoader = std::make_unique<VulkanDynamicLoader>("");
@@ -883,6 +879,14 @@ namespace fay
 			m_dynamicLoader->getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
 		VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
 
+		u32 sdlExtensionCount = 0;
+		const char* const* sdlExtensions = SDL_Vulkan_GetInstanceExtensions(&sdlExtensionCount);
+
+		for (u32 i = 0; i < sdlExtensionCount; i++)
+		{
+			m_enabledExtensions.Instance.insert(sdlExtensions[i]);
+		}
+
 		return CreateInstance();
 	}
 
@@ -890,32 +894,32 @@ namespace fay
 	{
 		for (const std::string& name : m_initInfo.RequiredVulkanDeviceExtensions)
 		{
-			g_enabledExtensions.Instance.insert(name);
+			m_enabledExtensions.Instance.insert(name);
 		}
 
 		for (const std::string& name : m_initInfo.OptionalVulkanInstanceExtensions)
 		{
-			g_optionalExtensions.Instance.insert(name);
+			m_optionalExtensions.Instance.insert(name);
 		}
 
 		for (const std::string& name : m_initInfo.RequiredVulkanLayers)
 		{
-			g_enabledExtensions.Layers.insert(name);
+			m_enabledExtensions.Layers.insert(name);
 		}
 		
 		for (const std::string& name : m_initInfo.OptionalVulkanLayers)
 		{
-			g_optionalExtensions.Layers.insert(name);
+			m_optionalExtensions.Layers.insert(name);
 		}
 
-		std::unordered_set<std::string> requiredExtensions = g_enabledExtensions.Instance;
+		std::unordered_set<std::string> requiredExtensions = m_enabledExtensions.Instance;
 
 		for(const vk::ExtensionProperties& instanceExt : vk::enumerateInstanceExtensionProperties())
 		{
 			const std::string& name = instanceExt.extensionName;
-			if (g_optionalExtensions.Instance.find(name) != g_optionalExtensions.Instance.end())
+			if (m_optionalExtensions.Instance.find(name) != m_optionalExtensions.Instance.end())
 			{
-				g_enabledExtensions.Instance.insert(name);
+				m_enabledExtensions.Instance.insert(name);
 			}
 
 			requiredExtensions.erase(name);
@@ -936,19 +940,19 @@ namespace fay
 
 		Log::Info("Enabled Vulkan instance extensions:");
 
-		for (const auto& ext : g_enabledExtensions.Instance)
+		for (const auto& ext : m_enabledExtensions.Instance)
 		{
 			Log::Info("    {}", ext.c_str());
 		}
 
-		std::unordered_set<std::string> requiredLayers = g_enabledExtensions.Layers;
+		std::unordered_set<std::string> requiredLayers = m_enabledExtensions.Layers;
 
 		for(const auto& layer : vk::enumerateInstanceLayerProperties())
 		{
 			const std::string& name = layer.layerName;
-			if (g_optionalExtensions.Layers.find(name) != g_optionalExtensions.Layers.end())
+			if (m_optionalExtensions.Layers.find(name) != m_optionalExtensions.Layers.end())
 			{
-				g_enabledExtensions.Layers.insert(name);
+				m_enabledExtensions.Layers.insert(name);
 			}
 
 			requiredLayers.erase(name);
@@ -966,13 +970,13 @@ namespace fay
 		}
 		
 		Log::Info("Enabled Vulkan layers:");
-		for (const auto& layer : g_enabledExtensions.Layers)
+		for (const auto& layer : m_enabledExtensions.Layers)
 		{
 			Log::Info("    {}", layer.c_str());
 		}
 
-		auto instanceExtVec = StringSetToVector(g_enabledExtensions.Instance);
-		auto layerVec = StringSetToVector(g_enabledExtensions.Layers);
+		auto instanceExtVec = StringSetToVector(m_enabledExtensions.Instance);
+		auto layerVec = StringSetToVector(m_enabledExtensions.Layers);
 		
 		auto applicationInfo = vk::ApplicationInfo();
 
@@ -1169,12 +1173,12 @@ namespace fay
 			return false;
 		}
 
-	#if FAY_OS_WINDOWS
+	#if !FAY_OS_WINDOWS
 		if (m_initInfo.EnableVSync || m_initInfo.EnableDebugRuntime)
 		{
 			// according to vulkan-tutorial.com, "the validation layer implementation expects
 			// the application to explicitly synchronize with the GPU"
-			m_PresentQueue.waitIdle();
+			m_presentQueue.waitIdle();
 		}
 	#endif
 

@@ -22,7 +22,7 @@ add_tests("CompileSuccess", { build_should_pass = true, group = "Compilation" })
 -- For nvrhi
 add_repositories("MyRepo https://github.com/ArnavMehta3000/xmake-repo.git")
 
-add_requires("nvrhi", { configs = { validation = true, vulkan = true, d3d12 = true } })
+add_requires("nvrhi", { configs = { validation = true, vulkan = true, d3d12 = true, } })
 add_requires("libsdl3", { alias = "sdl3" })
 add_requires("tracy v0.13.1")
 
@@ -50,6 +50,7 @@ target("Fay")
     -- set_pcxxheader("Fay/FayPCH.h")  -- This causes more problems than it helps
 
     if is_plat("windows") then
-        add_links("dxgi")  -- Other links handled by nvrhi
+        add_linkdirs(path.join(os.getenv("VULKAN_SDK"),"Lib"))
+        add_links("dxgi", "vulkan-1")  -- Other links handled by nvrhi
     end
 target_end()

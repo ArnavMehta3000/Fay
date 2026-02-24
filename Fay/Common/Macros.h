@@ -24,3 +24,7 @@
     #define FAY_DEBUG 1
     #define FAY_RELEASE 0
 #endif
+
+
+#undef min
+#undef max
