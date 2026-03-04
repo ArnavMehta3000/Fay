@@ -121,6 +121,7 @@ namespace fay
 
         [[nodiscard]] inline Renderer* GetRenderer() const { return m_renderer; }
 
+        virtual std::string_view GetName() const = 0;
         virtual void OnRender(nvrhi::IFramebuffer* framebuffer) = 0;
         virtual bool SupportsDepthBuffer() = 0;
         virtual void OnBackBufferResizeBegin() = 0;

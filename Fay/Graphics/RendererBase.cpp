@@ -162,6 +162,8 @@ namespace fay
 	void Renderer::AddRenderPassToFront(IRenderPass* renderPass)
 	{
 		ZoneScoped;
+
+		Log::Info("Adding [{}] render pass to front", renderPass->GetName());
 		m_renderPasses.remove(renderPass);
 		m_renderPasses.push_front(renderPass);
 
@@ -173,6 +175,8 @@ namespace fay
 	void Renderer::AddRenderPassToBack(IRenderPass* renderPass)
 	{
 		ZoneScoped;
+
+		Log::Info("Adding [{}] render pass to back", renderPass->GetName());
 		m_renderPasses.remove(renderPass);
 		m_renderPasses.push_back(renderPass);
 
@@ -184,6 +188,7 @@ namespace fay
 	void Renderer::RemoveRenderPass(IRenderPass* renderPass)
 	{
 		ZoneScoped;
+		Log::Info("Removing [{}] render pass", renderPass->GetName());
 		m_renderPasses.remove(renderPass);
 	}
 

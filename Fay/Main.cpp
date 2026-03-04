@@ -5,7 +5,7 @@
 #include <nvrhi/utils.h>
 #include <memory>
 
-static nvrhi::GraphicsAPI GetPlatformAPI()
+static constexpr inline nvrhi::GraphicsAPI GetPlatformAPI()
 {
 #if FAY_HAS_D3D
 	return nvrhi::GraphicsAPI::D3D12;
@@ -33,6 +33,7 @@ public:
         GetRenderer()->GetDevice()->executeCommandList(m_cmdList);
     }
 
+    std::string_view GetName() const override { return "ClearPass"; }
     bool SupportsDepthBuffer() override { return true; }
     void OnBackBufferResizeBegin() override {}
     void OnBackBufferResizeEnd(
@@ -49,7 +50,7 @@ static void Run()
 {
     fay::Window window(fay::Window::Desc::Default());
 
-    std::unique_ptr<fay::Renderer> renderer(fay::Renderer::Create(nvrhi::GraphicsAPI::VULKAN));
+    std::unique_ptr<fay::Renderer> renderer(fay::Renderer::Create(GetPlatformAPI()));
 
     fay::RendererInitInfo info{};
     info.DepthBufferFormat = nvrhi::Format::D32;
