@@ -1,0 +1,28 @@
+{
+	"common_args": [
+		"-WX",
+		"-Zi",
+		"-Qembed_debug"
+	],
+	"include_dirs": [],
+	"defines": [
+		"DEBUG=1"
+	],
+	"entries": [
+		{
+			"source_file": "Triangle.hlsl",
+			"output_file": "TriangleVS.cso",
+			"entry": "VSMain",
+			"target": "vs_6_0",
+			"defines": ["AS_VS=1"],
+			"extra_args": []
+		},
+		{
+			"source_file": "Triangle.hlsl",
+			"output_file": "TrianglePS.cso",
+			"entry": "PSMain",
+			"target": "ps_6_0",
+			"defines": ["AS_PS=1"]
+		}
+	]
+}
