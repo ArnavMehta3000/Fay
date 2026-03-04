@@ -13,6 +13,7 @@ namespace fay
 	using u64 = std::uint64_t;
 	using f32  = float;
 	using f64 = double;
+	using byte = u8;
 
 	static_assert(sizeof(u8) == 1);
 	static_assert(sizeof(u16) == 2);
@@ -20,4 +21,5 @@ namespace fay
 	static_assert(sizeof(u64) == 8);
 	static_assert(sizeof(f32) == 4);
 	static_assert(sizeof(f64) == 8);
+	static_assert(sizeof(byte) == 1);
 }
