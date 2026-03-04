@@ -22,7 +22,7 @@ add_tests("CompileSuccess", { build_should_pass = true, group = "Compilation" })
 -- For nvrhi
 add_repositories("MyRepo https://github.com/ArnavMehta3000/xmake-repo.git")
 
-add_requires("nvrhi", { configs = { validation = true, vulkan = true, d3d12 = true, } })
+add_requires("nvrhi", { configs = { validation = true, vulkan = true, d3d12 = is_plat("windows"), } })
 add_requires("libsdl3", { alias = "sdl3" })
 add_requires("tracy v0.13.1")
 
@@ -43,6 +43,8 @@ target("Fay")
 
     add_packages("nvrhi", "sdl3", "tracy")
 
+    add_undefines("min", "max")
+
 	add_includedirs("Fay", { public = true })
     add_files("Fay/**.cpp")
     add_headerfiles("Fay/**.h")
@@ -52,5 +54,9 @@ target("Fay")
     if is_plat("windows") then
         add_linkdirs(path.join(os.getenv("VULKAN_SDK"),"Lib"))
         add_links("dxgi", "vulkan-1")  -- Other links handled by nvrhi
+    elseif is_plat("linux") then
+        add_links("vulkan")
+        remove_files("Fay/Graphics/DX12/**.cpp")
+        remove_headerfiles("Fay/Graphics/DX12/**.h")
     end
 target_end()
