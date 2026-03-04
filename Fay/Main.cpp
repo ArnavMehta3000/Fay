@@ -1,9 +1,12 @@
 #include <SDL3/SDL.h>
+#include <memory>
+#include <nvrhi/utils.h>
+#include "Platform/FileReader.h"
 #include "Platform/Window.h"
 #include "Common/Profiling.h"
+#include "Common/Log.h"
 #include "Graphics/RendererBase.h"
-#include <nvrhi/utils.h>
-#include <memory>
+
 
 static constexpr inline nvrhi::GraphicsAPI GetPlatformAPI()
 {
@@ -21,7 +24,22 @@ public:
     ClearPass(fay::Renderer* renderer, nvrhi::Color clearColor)
         : IRenderPass(renderer), m_clearColor(clearColor)
     {
-        m_cmdList = GetRenderer()->GetDevice()->createCommandList();
+        auto device = GetRenderer()->GetDevice();
+
+        m_cmdList = device->createCommandList();
+        
+        fay::FileReader::ReadResult result = fay::FileReader::Read("Shaders/TriangleVS.cso");
+        if (!result)
+        {
+            fay::Log::Error("Failed to read shader file: {}", result.error());
+        }
+
+        auto& data = result.value();
+
+        nvrhi::ShaderDesc desc;
+        desc.setDebugName("TriangleVS").setEntryName("VSMain").setShaderType(nvrhi::ShaderType::Vertex);
+        
+        m_shader = device->createShader(desc, data.data(), data.size());
     }
 
     void OnRender(nvrhi::IFramebuffer* framebuffer) override
@@ -42,6 +60,7 @@ public:
         [[maybe_unused]] const fay::u32 sampleCount) override {}
     
 private:
+    nvrhi::ShaderHandle m_shader;
     nvrhi::Color m_clearColor;
     nvrhi::CommandListHandle m_cmdList;
 };
