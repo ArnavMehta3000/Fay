@@ -258,9 +258,18 @@ target("Fay")
 
 	add_undefines("min", "max")
 
-	add_includedirs("Fay", { public = true })
-	add_files("Fay/**.cpp")
-	add_headerfiles("Fay/**.h")
+	add_includedirs(
+		"Fay",
+		"External/SimpleMath",
+		{ public = true })
+
+	add_files(
+		"Fay/**.cpp", 
+		"External/SimpleMath/**.cpp")
+	add_headerfiles(
+		"Fay/**.h",
+		"External/SimpleMath/**.h",
+		"External/SimpleMath/**.inl")
 
 	-- set_pcxxheader("Fay/FayPCH.h")  -- This causes more problems than it helps
 
