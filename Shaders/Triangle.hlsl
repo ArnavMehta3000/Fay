@@ -1,71 +1,27 @@
-#define RootSig \
-	"RootFlags(ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT), " \
-	"CBV(b0, space=0, visibility=SHADER_VISIBILITY_ALL), " \
-	"CBV(b1, space=0, visibility=SHADER_VISIBILITY_VERTEX)"
-
-cbuffer cbPerFrame : register(b0)
+cbuffer CB : register(b0)
 {
-	float4x4 gView;
-	float4x4 gProjection;
-	float4x4 gViewProjection;
-	float4 gCameraPosition; // xyz = position, w = unused
-	float4 gTime; // x = deltaTime, y = totalTime, zw = unused
-}
-
-cbuffer cbPerObject : register(b1)
-{
-	float4x4 gWorld;
-	float4x4 gWorldViewProj;
-	//float4x4 gNormalMatrix; // Inverse transpose of world for lighting
-}
-
-struct VSInput
-{
-	float3 position : POSITION;
-	float3 normal : NORMAL;
-	float2 texcoord : TEXCOORD;
-	float4 color : COLOR;
-	uint vertexID : SV_VertexID;
+	float4x4 g_Transform;
 };
 
-struct PSInput
+void VSMain(
+	float3 i_pos     : POSITION,
+    float2 i_uv      : UV,
+	out float4 o_pos : SV_Position,
+	out float2 o_uv  : UV
+)
 {
-	float4 position : SV_POSITION;
-	float3 worldPos : WORLDPOS;
-	float3 normal : NORMAL;
-	float2 texcoord : TEXCOORD;
-	float4 color : COLOR;
-};
-
-[RootSignature(RootSig)]
-PSInput VSMain(VSInput input)
-{
-	PSInput result;
-	
-	float4 worldPos = mul(float4(input.position, 1.0f), gWorld);
-	result.position = mul(float4(input.position, 1.0f), gWorldViewProj);
-	result.worldPos = worldPos.xyz;
-	result.normal = float3(1.0f, 1.0f, 1.0f);
-	//result.normal = mul((float3x3) gNormalMatrix, input.normal);
-	result.texcoord = input.texcoord;
-	result.color = input.color;
-	
-	return result;
+	o_pos = mul(float4(i_pos, 1), g_Transform);
+	o_uv = i_uv;
 }
 
-[RootSignature(RootSig)]
-float4 PSMain(PSInput input) : SV_TARGET
+
+
+
+void PSMain(
+	in float4 i_pos    : SV_Position,
+	in float2 i_uv     : UV,
+	out float4 o_color : SV_Target0
+)
 {
-	// Simple directional light for visualization
-	float3 lightDir = normalize(float3(1.0f, 1.0f, -1.0f));
-	float3 normal = normalize(input.normal);
-	float ndotl = saturate(dot(normal, lightDir));
-	
-	float3 ambient = 0.15f;
-	float3 diffuse = ndotl * 0.85f;
-	
-	//float3 baseColor = input.color.rgb;
-	float3 baseColor = float3(input.texcoord, 1.0f);
-	
-	return float4(baseColor * (ambient + diffuse), input.color.a);
+	o_color = float4(i_uv.xy, 0.0f, 1.0f);
 }
