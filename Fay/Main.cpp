@@ -7,6 +7,7 @@
 #include "Common/Log.h"
 #include "Graphics/RendererBase.h"
 #include "SimpleMath.h"
+#include "App.h"
 
 namespace SM = DirectX::SimpleMath;
 
@@ -360,7 +361,8 @@ static void Run()
 
 int main()
 {
-    Run();
+    fay::App app;
+    app.Run();
 
     return 0;
 }

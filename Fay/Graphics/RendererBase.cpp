@@ -150,12 +150,6 @@ namespace fay
 		GetDevice()->runGarbageCollection();
 		++m_frameIndex;
 
-		//if (!GetDevice()->waitForIdle())
-		//{
-		//	Log::Error("Wait for idle failed!");
-		//	return false;
-		//}
-
 		return true;
 	}
 
