@@ -25,7 +25,8 @@ add_tests("CompileSuccess", { build_should_pass = true, group = "Compilation" })
 add_repositories("MyRepo https://github.com/ArnavMehta3000/xmake-repo.git")
 
 add_requires("nvrhi", { configs = { validation = true, vulkan = true, d3d12 = is_plat("windows"), } })
-add_requires("fastgltf", {configs = { cxx_standard = "20" }})
+add_requires("fastgltf")
+add_requires("stb")
 add_requires("libsdl3", { alias = "sdl3" })
 add_requires("tracy v0.13.1")
 
@@ -40,9 +41,12 @@ end
 target("Fay")
 	set_kind("binary")
 
-	add_packages("nvrhi", "sdl3", "tracy", "fastgltf")
+	add_packages("nvrhi", "sdl3", "tracy", "fastgltf", "stb")
 
 	add_undefines("min", "max")
+	if is_plat("windows") then
+		add_defines("UNICODE", "_UNICODE", "NOMINMAX", "NOMCX", "NOSERVICE", "NOHELP", "WIN32_LEAN_AND_MEAN")
+	end
 
 	add_includedirs(
 		"Fay",
@@ -76,5 +80,11 @@ target("Fay")
 			src_path = path.join(os.projectdir(), "Shaders"),
 			cfg_file = path.join(os.projectdir(), "Shaders", "ShaderBuild.json")
 		})
+
+		-- Copy assets folder
+		local assets_dir = path.join(os.projectdir(), "Assets")
+		if os.isdir(assets_dir) then
+			os.cp(assets_dir, target:targetdir())
+		end
 	end)
 target_end()
