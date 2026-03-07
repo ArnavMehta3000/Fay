@@ -25,6 +25,7 @@ add_tests("CompileSuccess", { build_should_pass = true, group = "Compilation" })
 add_repositories("MyRepo https://github.com/ArnavMehta3000/xmake-repo.git")
 
 add_requires("nvrhi", { configs = { validation = true, vulkan = true, d3d12 = is_plat("windows"), } })
+add_requires("fastgltf", {configs = { cxx_standard = "20" }})
 add_requires("libsdl3", { alias = "sdl3" })
 add_requires("tracy v0.13.1")
 
@@ -39,7 +40,7 @@ end
 target("Fay")
 	set_kind("binary")
 
-	add_packages("nvrhi", "sdl3", "tracy")
+	add_packages("nvrhi", "sdl3", "tracy", "fastgltf")
 
 	add_undefines("min", "max")
 
