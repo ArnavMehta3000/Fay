@@ -11,7 +11,6 @@ namespace fay
         : m_window(nullptr)
 		, m_desc(desc)
 		, m_isRunning(true)
-		, m_hasSizeChanged(false)
     {
 		ZoneScoped;
 		if (SDL_Init(SDL_INIT_VIDEO) == false)
@@ -64,24 +63,18 @@ namespace fay
 
 			case SDL_EVENT_WINDOW_RESIZED:
 				m_desc.Size = { static_cast<u32>(e.window.data1), static_cast<u32>(e.window.data2) };
-				m_hasSizeChanged = true;
 				Log::Info("Window received resize ({}x{}) event", m_desc.Size.first, m_desc.Size.second);
 				break;
+			}
+
+			// Fire off hooks
+			for (IWindowEventHook* hook : m_eventHooks)
+			{
+				if (hook) { hook->OnWindowEvent(e); }
 			}
 		}
 
 		return m_isRunning;
-	}
-
-	bool Window::HasSizeChanged()
-	{
-		if (m_hasSizeChanged)
-		{
-			m_hasSizeChanged = false;
-			return true;
-		}
-
-		return false;
 	}
 
 #if FAY_OS_WINDOWS

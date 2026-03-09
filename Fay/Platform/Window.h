@@ -1,12 +1,19 @@
 #pragma once
 #include <string>
+#include <vector>
 #include "Common/Types.h"
 #include "Common/Macros.h"
 
 struct SDL_Window;
+union SDL_Event;
 
 namespace fay
 {
+    struct IWindowEventHook
+    {
+        virtual void OnWindowEvent(const SDL_Event&) = 0;
+    };
+
     class Window
     {
     public:
@@ -24,8 +31,8 @@ namespace fay
         ~Window();
 
 		bool PumpEvents();
-        bool HasSizeChanged();
 
+        inline void AddEventHook(IWindowEventHook* hook) { m_eventHooks.push_back(hook); }
 		[[nodiscard]] inline SDL_Window* GetSDL() const { return m_window; }
         [[nodiscard]] inline std::pair<u32, u32> GetSize() const { return m_desc.Size; }
 	
@@ -37,8 +44,8 @@ namespace fay
 
     private:
         SDL_Window* m_window;
-        Desc m_desc;
-		bool m_isRunning;
-        bool m_hasSizeChanged;
+        Desc        m_desc;
+		bool        m_isRunning;
+        std::vector<IWindowEventHook*> m_eventHooks;
     };
 }
