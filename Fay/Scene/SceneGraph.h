@@ -72,7 +72,7 @@ namespace fay
 		using LightVisitor  = std::function<void(const SceneNode&, const LightComponent&, const SM::Matrix&)>;
 
 		Scene();
-		~Scene() = default;
+		~Scene();		
 
 		Scene(const Scene&) = delete;
 		Scene& operator=(const Scene&) = delete;

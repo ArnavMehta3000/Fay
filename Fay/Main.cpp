@@ -8,6 +8,8 @@
 #include "Graphics/RendererBase.h"
 #include "SimpleMath.h"
 #include "App.h"
+#include "Scene/GLTFImporter.h"
+#include "Scene/SceneGraph.h"
 
 namespace SM = DirectX::SimpleMath;
 
@@ -329,31 +331,35 @@ static void Run()
         = info.EnableGPUValidation = FAY_DEBUG;
     info.LogBufferLifetime = true;
 
-    if (renderer->Init(info, window))
+    if (!renderer->Init(info, window))
     {
-        ClearPass clearPass(renderer.get(), nvrhi::Color(0.015f));
-        DrawPass drawPass(renderer.get());
+        fay::Log::Error("Failed to initialize renderer!");
+        return;
+    }
 
-        renderer->AddRenderPassToBack(&clearPass);
-        renderer->AddRenderPassToBack(&drawPass);
+    ClearPass clearPass(renderer.get(), nvrhi::Color(0.015f));
+    DrawPass drawPass(renderer.get());
 
-        while (window.PumpEvents())
+    renderer->AddRenderPassToBack(&clearPass);
+    renderer->AddRenderPassToBack(&drawPass);
+
+    while (window.PumpEvents())
+    {
+        // TODO: upgrade this to make use of windwo event hooks
+        //if (window.HasSizeChanged())
+        //{
+        //    renderer->Resize();
+        //}
+
+        if (renderer->PreRender())
         {
-            if (window.HasSizeChanged())
-            {
-                renderer->Resize();
-            }
-
-            if (renderer->PreRender())
-            {
-                renderer->DoRenderPasses();
-                renderer->PostRender();
-            }
-
-            SDL_UpdateWindowSurface(window.GetSDL());
-
-            FrameMark;
+            renderer->DoRenderPasses();
+            renderer->PostRender();
         }
+
+        SDL_UpdateWindowSurface(window.GetSDL());
+
+        FrameMark;
     }
 
     renderer->Shutdown();
@@ -364,5 +370,6 @@ int main()
     fay::App app;
     app.Run();
 
+    //Run();
     return 0;
 }

@@ -278,10 +278,10 @@ namespace fay
 		switch (severity)
 		{
 			using enum nvrhi::MessageSeverity;
-		case Info: Log::Info("{}", messageText);     break;
-		case Warning: Log::Warn("{}", messageText);  break;
-		case Error: Log::Error("{}", messageText);   break;
-		case Fatal: Log::Error("{}", messageText); Assert(false);  break;
+		case Info: Log::Info("[NVRHI] {}", messageText);     break;
+		case Warning: Log::Warn("[NVRHI] {}", messageText);  break;
+		case Error: Log::Error("[NVRHI] {}", messageText);   break;
+		case Fatal: Log::Error("[NVRHI] {}", messageText); Assert(false);  break;
 		}
 	}
 }

@@ -13,6 +13,13 @@ namespace fay
 		: m_root(std::make_unique<SceneNode>("Root"))
 	{
 	}
+
+	Scene::~Scene()
+	{
+		m_root = nullptr;
+		Meshes.clear();
+		Materials.clear();
+	}
 	
 	void Scene::TraverseRecursive(SceneNode* node, const SM::Matrix& parentWorld)
 	{

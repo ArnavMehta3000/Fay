@@ -10,16 +10,16 @@
 	],
 	"entries": [
 		{
-			"source_file": "Triangle.hlsl",
-			"output_file": "TriangleVS.cso",
+			"source_file": "Mesh.hlsl",
+			"output_file": "MeshVS.cso",
 			"entry": "VSMain",
 			"target": "vs_6_0",
 			"defines": ["AS_VS=1"],
 			"extra_args": []
 		},
 		{
-			"source_file": "Triangle.hlsl",
-			"output_file": "TrianglePS.cso",
+			"source_file": "Mesh.hlsl",
+			"output_file": "MeshPS.cso",
 			"entry": "PSMain",
 			"target": "ps_6_0",
 			"defines": ["AS_PS=1"]

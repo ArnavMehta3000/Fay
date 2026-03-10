@@ -7,6 +7,7 @@
 #include "Scene/SceneGraph.h"
 #include "Common/Log.h"
 #include "Common/Profiling.h"
+#include "Common/Assert.h"
 #include <fastgltf/core.hpp>
 #include <fastgltf/types.hpp>
 #include <fastgltf/tools.hpp>
@@ -62,9 +63,9 @@ namespace fay
 
 		Log::Info("Loading GLTF: {}", path.string());
 
-		fastgltf::Parser parser(fastgltf::Extensions::KHR_materials_specular
+		fastgltf::Parser parser(fastgltf::Extensions::KHR_materials_variants
 			| fastgltf::Extensions::KHR_texture_transform 
-			| fastgltf::Extensions::KHR_lights_punctual);
+			| fastgltf::Extensions::KHR_mesh_quantization);
 
 		auto data = fastgltf::GltfDataBuffer::FromPath(path);
 
@@ -142,7 +143,7 @@ namespace fay
 
 				// Positions
 				fastgltf::Attribute* posAccessor = primitive.findAttribute("POSITION");
-				if (!posAccessor)
+				if (!posAccessor || posAccessor == primitive.attributes.end())
 				{
 					Log::Warn("Primitive in mesh '{}' has no POSITION attribute, skipping", mesh->m_name);
 					continue;
@@ -163,7 +164,7 @@ namespace fay
 					});
 
 				// Normals
-				if (fastgltf::Attribute* normAttr = primitive.findAttribute("NORMAL"))
+				if (fastgltf::Attribute* normAttr = primitive.findAttribute("NORMAL"); normAttr != primitive.attributes.end())
 				{
 					fastgltf::Accessor& acc = Asset->accessors[normAttr->accessorIndex];
 					fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec3>(*Asset, acc,
@@ -172,9 +173,13 @@ namespace fay
 							vertices[i].Normal = SM::Vector3(n.x(), n.y(), n.z());
 						});
 				}
+				else
+				{
+					Log::Warn("Primitive in mesh '{}' has no NORMAL attribute, skipping", mesh->m_name);
+				}
 
 				// UV
-				if (fastgltf::Attribute* uvAttr = primitive.findAttribute("TEXCOORD_0"))
+				if (fastgltf::Attribute* uvAttr = primitive.findAttribute("TEXCOORD_0"); uvAttr != primitive.attributes.end())
 				{
 					fastgltf::Accessor& acc = Asset->accessors[uvAttr->accessorIndex];
 					fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec2>(*Asset, acc,
@@ -183,17 +188,25 @@ namespace fay
 							vertices[i].UV = SM::Vector2(uv.x(), uv.y());
 						});
 				}
+				else
+				{
+					Log::Warn("Primitive in mesh '{}' has no TEXCOORD_0 attribute, skipping", mesh->m_name);
+				}
 
 				// Tangent
-				//if (fastgltf::Attribute* tanAttr = primitive.findAttribute("TANGENT"))
-				//{
-				//	fastgltf::Accessor& acc = Asset->accessors[tanAttr->accessorIndex];
-				//	fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec4>(*Asset, acc,
-				//		[&](const fastgltf::math::fvec4& t, std::size_t i)
-				//		{
-				//			vertices[i].Tangent = SM::Vector4(t.x(), t.y(), t.z(), t.w());
-				//		});
-				//}
+				if (fastgltf::Attribute* tanAttr = primitive.findAttribute("TANGENT"); tanAttr != primitive.attributes.end())
+				{
+					fastgltf::Accessor& acc = Asset->accessors[tanAttr->accessorIndex];
+					fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec4>(*Asset, acc,
+						[&](const fastgltf::math::fvec4& t, std::size_t i)
+						{
+							vertices[i].Tangent = SM::Vector4(t.x(), t.y(), t.z(), t.w());
+						});
+				}
+				else
+				{
+					Log::Warn("Primitive in mesh '{}' has no TANGENT attribute, skipping", mesh->m_name);
+				}
 
 				// Indices
 				if (primitive.indicesAccessor.has_value())
@@ -366,42 +379,44 @@ namespace fay
 		i32 width = 0, height = 0, channels = 0;
 		stbi_uc* pixels = nullptr;
 
-		std::visit(fastgltf::visitor
+		if (std::holds_alternative<fastgltf::sources::URI>(gltfImage.data))
 		{
-			[](auto&) { /* monostate / unhandled */ },
+			auto& uri = std::get<fastgltf::sources::URI>(gltfImage.data);  // Load from filename
 
-			[&](const fastgltf::sources::URI& uri)
-			{
-				fs::path fullPath = BasePath / uri.uri.fspath();
-				pixels = stbi_load(fullPath.string().c_str(), &width, &height, &channels, 4);
-			},
+			Assert(uri.fileByteOffset == 0);
+			Assert(uri.uri.isLocalPath());  // Needs to be a local file to be loaded
 
-			[&](const fastgltf::sources::Array& array)
+			fs::path fullPath = BasePath / uri.uri.fspath();
+			pixels = stbi_load(fullPath.string().c_str(), &width, &height, &channels, 4);
+		}
+		else if (std::holds_alternative<fastgltf::sources::Array>(gltfImage.data))  // Load from memory
+		{
+			auto& array = std::get<fastgltf::sources::Array>(gltfImage.data);
+			pixels = stbi_load_from_memory(
+				reinterpret_cast<const stbi_uc*>(array.bytes.data()),
+				static_cast<i32>(array.bytes.size()),
+				&width, &height, &channels, 4);
+		}
+		else if (std::holds_alternative<fastgltf::sources::BufferView>(gltfImage.data))  // Load from buffer view
+		{
+			auto& bufferView = std::get<fastgltf::sources::BufferView>(gltfImage.data);
+
+			fastgltf::BufferView& view = Asset->bufferViews[bufferView.bufferViewIndex];
+			fastgltf::Buffer& buffer = Asset->buffers[view.bufferIndex];
+
+			if (std::holds_alternative<fastgltf::sources::Array>(buffer.data))
 			{
+				auto& array = std::get<fastgltf::sources::Array>(buffer.data);
 				pixels = stbi_load_from_memory(
 					reinterpret_cast<const stbi_uc*>(array.bytes.data()),
 					static_cast<i32>(array.bytes.size()),
 					&width, &height, &channels, 4);
-			},
-
-			[&](const fastgltf::sources::BufferView& bufferView)
-			{
-				fastgltf::BufferView& view = Asset->bufferViews[bufferView.bufferViewIndex];
-				fastgltf::Buffer& buffer   = Asset->buffers[view.bufferIndex];
-				
-				std::visit(fastgltf::visitor
-				{
-					[](auto&) {},
-					[&](const fastgltf::sources::Array& array)
-					{
-						pixels = stbi_load_from_memory(
-							reinterpret_cast<const stbi_uc*>(array.bytes.data() + view.byteOffset),
-							static_cast<i32>(view.byteLength),
-							&width, &height, &channels, 4);
-					}
-				}, buffer.data);
-			},
-		}, gltfImage.data);
+			}
+		}
+		else
+		{
+			Assert(!"Unknown image data type");
+		}
 
 		if (!pixels)
 		{

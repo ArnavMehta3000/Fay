@@ -27,6 +27,7 @@ add_repositories("MyRepo https://github.com/ArnavMehta3000/xmake-repo.git")
 add_requires("nvrhi", { configs = { validation = true, vulkan = true, d3d12 = is_plat("windows"), } })
 add_requires("fastgltf")
 add_requires("stb")
+add_requires("nlohmann_json")
 add_requires("libsdl3", { alias = "sdl3" })
 add_requires("tracy v0.13.1")
 
@@ -41,7 +42,7 @@ end
 target("Fay")
 	set_kind("binary")
 
-	add_packages("nvrhi", "sdl3", "tracy", "fastgltf", "stb")
+	add_packages("nvrhi", "sdl3", "tracy", "fastgltf", "stb", "nlohmann_json")
 
 	add_undefines("min", "max")
 	if is_plat("windows") then

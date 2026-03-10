@@ -2,7 +2,9 @@
 #include "Common/Profiling.h"
 #include "Common/Assert.h"
 #include "Common/Log.h"
+#include <fstream>
 #include <SDL3/SDL.h>
+#include <nlohmann/json.hpp>
 
 namespace fay
 {
@@ -19,13 +21,12 @@ namespace fay
 	}
 
 	App::App()
-		: m_initialized(false)
-		, m_window(Window::Desc::Default())
+		: m_window(Window::Desc::Default())
 		, m_renderer(fay::Renderer::Create(GetPlatformAPI()))
 	{
 		ZoneScoped;
 
-		Log::Info("Created application");
+		m_window.AddEventHook(this);
 
 		fay::RendererInitInfo info{};
 		info.DepthBufferFormat = nvrhi::Format::D32;
@@ -40,34 +41,32 @@ namespace fay
 			Log::Error("Failed to initialize renderer!");
 		}
 
-		m_initialized = true;
+		m_gltfImporter = std::make_unique<GLTFImporter>(m_renderer.get());
+
+		LoadScene();
+		
+		Log::Info("Finished App initialization");
 	}
 	
 	App::~App()
 	{
 		ZoneScoped;
 
+		m_scene = nullptr;
+
+		m_gltfImporter = nullptr;
+
 		Log::Info("Destroying application");
 		m_renderer->Shutdown();
+		m_renderer = nullptr;
 	}
 	
 	void App::Run()
 	{
-		if (!m_initialized)
-		{
-			Log::Error("App not initialized! Quitting...");
-			return;
-		}
-
 		Log::Info("Running application");
 
 		while (m_window.PumpEvents())
 		{
-			if (m_window.HasSizeChanged())
-			{
-				m_renderer->Resize();
-			}
-
 			if (m_renderer->PreRender())
 			{
 				m_renderer->DoRenderPasses();  // Maybe rename this to RenderFrame?
@@ -78,5 +77,30 @@ namespace fay
 
 			FrameMark;
 		}
+	}
+	
+	void App::OnWindowEvent(const SDL_Event& e)
+	{
+		switch (e.type)
+		{
+		case SDL_EVENT_WINDOW_RESIZED:
+			m_renderer->Resize();  // Renderer will query the window size internally
+			break;
+		}
+	}
+	
+	void App::LoadScene()
+	{
+		static constexpr auto sceneFile = "Assets/Scenes/Scene.json";
+		
+		using json = nlohmann::json;
+
+		std::ifstream f(sceneFile);
+		json sceneJson = json::parse(f);
+
+		auto meshes = sceneJson["meshes"].get<std::vector<std::string>>();
+
+		// Simply load the first mesh as a scene
+		m_scene = m_gltfImporter->Load(meshes[0]);
 	}
 }
