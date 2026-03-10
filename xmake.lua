@@ -61,7 +61,7 @@ target("Fay")
 		"External/SimpleMath/**.h",
 		"External/SimpleMath/**.inl")
 
-	add_extrafiles("Shaders/**.hlsl")
+	add_extrafiles("Shaders/**.hlsl", "Shaders/**.hlsli")
 
 	if is_plat("windows") then
 		add_linkdirs(path.join(os.getenv("VULKAN_SDK"),"Lib"))
@@ -74,11 +74,12 @@ target("Fay")
 
 	after_build(function (target)
 		import("core.project.task")
-		task.run("compile_shaders", 
+		task.run("compile_shaders",
 		{
-			out_dir  = target:targetdir(),
-			src_path = path.join(os.projectdir(), "Shaders"),
-			cfg_file = path.join(os.projectdir(), "Shaders", "ShaderBuild.json")
+			out_dir     = target:targetdir(),
+			src_path    = path.join(os.projectdir(), "Shaders"),
+			cfg_file    = path.join(os.projectdir(), "Shaders", "ShaderBuild.json"),
+			target_name = target:name()
 		})
 
 		-- Copy assets folder

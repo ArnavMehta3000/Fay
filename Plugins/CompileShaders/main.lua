@@ -3,8 +3,10 @@ import("lib.detect.find_tool")
 import("core.base.json")
 import("core.base.process")
 import("core.project.depend")
+import("utils.progress")
 
 function main()
+	local start = os.mclock()
 	-- Find DXC
 	local dxc = find_tool("dxc", { check = "--help" })
 	assert(dxc, "DXC not found")
@@ -13,7 +15,19 @@ function main()
 	local shaders_path = assert(option.get("src_path"), "No shader source path provided (--src_path)")
 	local cfg_path     = assert(option.get("cfg_file"), "No shader build config path provided (--cfg_file)")
 	local out_dir      = assert(option.get("out_dir"), "No output directory provided (--out_dir)")
-	local force        = option.get("force")
+	local force         = option.get("force")
+	local target_name   = option.get("target_name")
+
+	-- Resolve depend directory: use target's dependir if target_name given, else fallback to out_dir
+	local dep_dir
+	if target_name then
+		import("core.project.project")
+		local proj_target = project.target(target_name)
+		assert(proj_target, "Target not found: " .. target_name)
+		dep_dir = proj_target:dependir()
+	else
+		dep_dir = path.join(out_dir, "DepFiles")
+	end
 
 	out_dir = path.join(out_dir, "Shaders")
 	if not os.isdir(out_dir) then
@@ -25,7 +39,9 @@ function main()
 		os.mkdir(log_path)
 	end
 
-	print("Compiling shaders...")
+	if not os.isdir(dep_dir) then
+		os.mkdir(dep_dir)
+	end
 
 	-- Load config
 	local cfg          = json.loadfile(cfg_path)
@@ -75,7 +91,7 @@ function main()
 			depend.on_changed(function ()
 				needs_compile = true
 			end, {
-				dependfile = path.join(out_dir, "DepFiles", path.basename(entry.output_file) .. ".d"),
+				dependfile = path.join(dep_dir, path.basename(entry.output_file) .. ".d"),
 				files      = dep_files,
 				values     = { entry_point, target, common_args, defines, file_defines },
 			})
@@ -151,27 +167,34 @@ function main()
 	end
 
 	local has_errors = false
+	local completed  = 0
+	local total      = #dxc_jobs
+
 	for _, job in ipairs(dxc_jobs) do
 		local ok, status = job.proc:wait()
 		job.proc:close()
+		completed = completed + 1
+
+		progress.show(math.floor((completed / total) * 100), "compiling shaders (%d/%d)", completed, total)
 
 		if ok >= 0 and status == 0 then
-			cprint("${green}[Success] %s", job.name)
+			cprint("\t${green}[Success] %s${clear}", job.name)
+			
 			if os.isfile(job.stdout_file) then
 				local content = io.readfile(job.stdout_file)
 				if content and content:trim() ~= "" then
-					cprint("${yellow}[Warnings] %s:${clear}", job.name)
+					cprint("\t${yellow}[Warnings] %s:${clear}", job.name)
 					print(content)
 				end
 			end
 		else
 			has_errors = true
-			cprint("${red}[Failed] %s (exit code: %d | status: %d)${clear}", job.name, ok, status)
+			cprint("$\t{red}[Failed] %s (exit code: %d | status: %d)${clear}", job.name, ok, status)
 
 			if os.isfile(job.stderr_file) then
 				local content = io.readfile(job.stderr_file)
 				if content and content:trim() ~= "" then
-					cprint("${red}[stderr]${clear}")
+					cprint("\t${red}[stderr]${clear}")
 					print(content)
 				end
 			end
@@ -179,16 +202,18 @@ function main()
 			if os.isfile(job.stdout_file) then
 				local content = io.readfile(job.stdout_file)
 				if content and content:trim() ~= "" then
-					cprint("${yellow}[stdout]${clear}")
+					cprint("\t${yellow}[stdout]${clear}")
 					print(content)
 				end
 			end
 		end
 	end
 
+
 	if has_errors then
 		raise("Shader compilation failed")
 	else
+		print("Shader compilation took %.2f ms", os.mclock() - start)
 		print("All shaders compiled successfully")
 	end
 end

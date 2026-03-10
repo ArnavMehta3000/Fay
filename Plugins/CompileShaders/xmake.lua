@@ -7,10 +7,11 @@ task("compile_shaders")
 		description = "Compile HLSL shaders using DXC",
 		options =
 		{
-			{'o', "out_dir",  "kv", nil, "Output directory for compiled shaders" },
-			{'s', "src_path", "kv", nil, "Path to shader source directory"       },
-			{'c', "cfg_file", "kv", nil, "Path to ShaderBuild.json config file"  },
-			{'f', "force",    "k",  nil, "Force recompilation of all shaders"    },
+			{'o', "out_dir",     "kv", nil, "Output directory for compiled shaders"                        },
+			{'s', "src_path",    "kv", nil, "Path to shader source directory"                              },
+			{'c', "cfg_file",    "kv", nil, "Path to ShaderBuild.json config file"                         },
+			{'t', "target_name", "kv", nil, "xmake target name (uses target's dependir for .d files)"      },
+			{'f', "force",       "k",  nil, "Force recompilation of all shaders"                           },
 		}
 	})
 
