@@ -4,7 +4,7 @@
 #include "Scene/GLTFImporter.h"
 #include "Graphics/RendererBase.h"
 #include "Graphics/GraphicsTypes.h"
-#include "Scene/SceneGraph.h"
+#include "Graphics/Mesh.h"
 #include "Common/Log.h"
 #include "Common/Profiling.h"
 #include "Common/Assert.h"
@@ -26,24 +26,18 @@ namespace fay
 		nvrhi::IDevice* Device = nullptr;
 		nvrhi::CommandListHandle CmdList;
 
-		// Loaded asset reference (lives for the duration of Load())
 		fastgltf::Asset* Asset = nullptr;
 		std::filesystem::path  BasePath;
 
-		// Caches so we don't load the same texture twice
 		std::vector<TextureResource> TextureCache;
 
-		// ── Core loading methods ──
-		std::unique_ptr<Scene> BuildScene();
-		void LoadMeshes(Scene& scene);
-		void LoadMaterials(Scene& scene);
+		std::unique_ptr<MeshCollection> BuildMeshCollection();
+		void LoadMeshes(MeshCollection& collection);
+		void LoadMaterials(MeshCollection& collection);
 		void LoadTextures();
-		void BuildNodeHierarchy(Scene& scene);
 
-		// ── Helpers ──
 		TextureResource LoadTexture(u32 textureIndex);
 		nvrhi::SamplerHandle CreateSampler(const fastgltf::Sampler& sampler);
-		void ProcessNode(Scene& scene, SceneNode* parent, u32 nodeIndex);
 	};
 
 
@@ -57,14 +51,14 @@ namespace fay
 
 	GLTFImporter::~GLTFImporter() = default;
 
-	std::unique_ptr<Scene> GLTFImporter::Load(const fs::path& path)
+	std::unique_ptr<MeshCollection> GLTFImporter::Load(const fs::path& path)
 	{
 		ZoneScoped;
 
 		Log::Info("Loading GLTF: {}", path.string());
 
 		fastgltf::Parser parser(fastgltf::Extensions::KHR_materials_variants
-			| fastgltf::Extensions::KHR_texture_transform 
+			| fastgltf::Extensions::KHR_texture_transform
 			| fastgltf::Extensions::KHR_mesh_quantization);
 
 		auto data = fastgltf::GltfDataBuffer::FromPath(path);
@@ -82,7 +76,7 @@ namespace fay
 			| fastgltf::Options::GenerateMeshIndices;
 
 		fastgltf::GltfType type = fastgltf::determineGltfFileType(data.get());
-		
+
 		// Load GLTF or GLB
 		auto asset = (type == fastgltf::GltfType::glTF)
 			? parser.loadGltf(data.get(), m_impl->BasePath, options)
@@ -95,34 +89,33 @@ namespace fay
 		}
 
 		m_impl->Asset = &asset.get();
-		
-		std::unique_ptr<Scene> scene    = m_impl->BuildScene();
+
+		auto collection = m_impl->BuildMeshCollection();
+		collection->SourcePath = path.string();
+
 		m_impl->Asset = nullptr;
 		m_impl->TextureCache.clear();
 
-		Log::Info("Loaded glTF: {} meshes, {} materials, {} nodes",
-			scene->Meshes.size(), scene->Materials.size(),
-			m_impl->Asset ? 0 : scene->Meshes.size());
+		Log::Info("Loaded glTF: {} meshes, {} materials",
+			collection->Meshes.size(), collection->Materials.size());
 
-		return scene;
+		return collection;
 	}
 
-	std::unique_ptr<Scene> GLTFImporter::Impl::BuildScene()
+	std::unique_ptr<MeshCollection> GLTFImporter::Impl::BuildMeshCollection()
 	{
 		ZoneScoped;
 
-		auto scene = std::make_unique<Scene>();
+		auto collection = std::make_unique<MeshCollection>();
 
 		LoadTextures();
-		LoadMaterials(*scene);
-		LoadMeshes(*scene);
-		BuildNodeHierarchy(*scene);
+		LoadMaterials(*collection);
+		LoadMeshes(*collection);
 
-		scene->UpdateTransforms();
-		return scene;
+		return collection;
 	}
 
-	void GLTFImporter::Impl::LoadMeshes(Scene& scene)
+	void GLTFImporter::Impl::LoadMeshes(MeshCollection& collection)
 	{
 		ZoneScoped;
 
@@ -137,8 +130,8 @@ namespace fay
 			for (auto& primitive : gltfMesh.primitives)
 			{
 				SubMesh sub;
-				sub.VertexOffset  = static_cast<u32>(allVertices.size());
-				sub.IndexOffset   = static_cast<u32>(allIndices.size());
+				sub.VertexOffset = static_cast<u32>(allVertices.size());
+				sub.IndexOffset = static_cast<u32>(allIndices.size());
 				sub.MaterialIndex = primitive.materialIndex.has_value() ? static_cast<i32>(*primitive.materialIndex) : -1;
 
 				// Positions
@@ -270,11 +263,11 @@ namespace fay
 				CmdList->close();
 				Device->executeCommandList(CmdList);
 			}
-			scene.Meshes.push_back(std::move(mesh));
+			collection.Meshes.push_back(std::move(mesh));
 		}
 	}
 
-	void GLTFImporter::Impl::LoadMaterials(Scene& scene)
+	void GLTFImporter::Impl::LoadMaterials(MeshCollection& collection)
 	{
 		ZoneScoped;
 
@@ -342,7 +335,7 @@ namespace fay
 			CmdList->close();
 			Device->executeCommandList(CmdList);
 
-			scene.Materials.push_back(std::move(mat));
+			collection.Materials.push_back(std::move(mat));
 		}
 	}
 
@@ -374,7 +367,7 @@ namespace fay
 		}
 
 		fastgltf::Image& gltfImage = Asset->images[*gltfTexture.imageIndex];
-		
+
 		// Decode image
 		i32 width = 0, height = 0, channels = 0;
 		stbi_uc* pixels = nullptr;
@@ -490,149 +483,18 @@ namespace fay
 
 		// Wrap modes
 		auto toAddressMode = [](fastgltf::Wrap wrap) -> nvrhi::SamplerAddressMode
-		{
-			switch (wrap)
 			{
-			case fastgltf::Wrap::ClampToEdge:    return nvrhi::SamplerAddressMode::ClampToEdge;
-			case fastgltf::Wrap::MirroredRepeat: return nvrhi::SamplerAddressMode::MirroredRepeat;
-			default:                             return nvrhi::SamplerAddressMode::Repeat;
-			}
-		};
+				switch (wrap)
+				{
+				case fastgltf::Wrap::ClampToEdge:    return nvrhi::SamplerAddressMode::ClampToEdge;
+				case fastgltf::Wrap::MirroredRepeat: return nvrhi::SamplerAddressMode::MirroredRepeat;
+				default:                             return nvrhi::SamplerAddressMode::Repeat;
+				}
+			};
 
 		desc.setAddressU(toAddressMode(sampler.wrapS));
 		desc.setAddressV(toAddressMode(sampler.wrapT));
 
 		return Device->createSampler(desc);
-	}
-
-	void GLTFImporter::Impl::BuildNodeHierarchy(Scene& scene)
-	{
-		ZoneScoped;
-
-		// Determine which glTF scene to use
-		u64 sceneIndex = Asset->defaultScene.has_value() ? *Asset->defaultScene : 0;
-		if (sceneIndex >= Asset->scenes.size())
-		{
-			Log::Warn("No valid scene in glTF, using all root nodes");
-			for (u32 i = 0; i < Asset->nodes.size(); ++i)
-			{
-				ProcessNode(scene, scene.GetRoot(), i);
-			}
-			return;
-		}
-
-		fastgltf::Scene& gltfScene = Asset->scenes[sceneIndex];
-		for (auto nodeIdx : gltfScene.nodeIndices)
-		{
-			ProcessNode(scene, scene.GetRoot(), static_cast<u32>(nodeIdx));
-		}
-	}
-
-	void GLTFImporter::Impl::ProcessNode(Scene& scene, SceneNode* parent, u32 nodeIndex)
-	{
-		ZoneScoped;
-
-		fastgltf::Node& gltfNode = Asset->nodes[nodeIndex];
-
-		auto node = std::make_unique<SceneNode>(std::string(gltfNode.name));
-
-		// Transform
-        // NOTE: fastgltf stores TRS as a variant: either a matrix or decomposed TRS
-		std::visit(fastgltf::visitor
-		{
-			[&](const fastgltf::TRS& trs)
-			{
-				node->LocalTransform.Translation = SM::Vector3(trs.translation[0], trs.translation[1], trs.translation[2]);
-				node->LocalTransform.Rotation    = SM::Quaternion(trs.rotation[0], trs.rotation[1], trs.rotation[2], trs.rotation[3]);
-				node->LocalTransform.Scale       = SM::Vector3(trs.scale[0], trs.scale[1], trs.scale[2]);
-			},
-
-			[&](const fastgltf::math::fmat4x4& mat)
-			{
-				// Decompose the 4x4 matrix into TRS
-				SM::Matrix m(
-					mat[0][0], mat[0][1], mat[0][2], mat[0][3],
-					mat[1][0], mat[1][1], mat[1][2], mat[1][3],
-					mat[2][0], mat[2][1], mat[2][2], mat[2][3],
-					mat[3][0], mat[3][1], mat[3][2], mat[3][3]);
-				m.Decompose(node->LocalTransform.Scale,
-							node->LocalTransform.Rotation,
-							node->LocalTransform.Translation);
-			}
-		}, gltfNode.transform);
-
-		// Mesh component
-		if (gltfNode.meshIndex.has_value())
-		{
-			node->AddComponent(MeshComponent{ .MeshIndex = static_cast<u32>(*gltfNode.meshIndex) });
-		}
-
-		// Camera component
-		if (gltfNode.cameraIndex.has_value())
-		{
-			fastgltf::Camera& gltfCam = Asset->cameras[*gltfNode.cameraIndex];
-			CameraComponent cam;
-
-			std::visit(fastgltf::visitor
-			{
-				[&](const fastgltf::Camera::Perspective& persp)
-				{
-					cam.CameraType = CameraComponent::Type::Perspective;
-					cam.FOV        = DirectX::XMConvertToDegrees(static_cast<f32>(persp.yfov));
-					cam.NearPlane  = persp.znear;
-					cam.FarPlane   = persp.zfar.has_value() ? static_cast<f32>(*persp.zfar) : 10000.0f;
-				},
-
-				[&](const fastgltf::Camera::Orthographic& ortho)
-				{
-					cam.CameraType  = CameraComponent::Type::Orthographic;
-					cam.OrthoWidth  = static_cast<f32>(ortho.xmag * 2.0);
-					cam.OrthoHeight = static_cast<f32>(ortho.ymag * 2.0);
-					cam.NearPlane   = ortho.znear;
-					cam.FarPlane    = ortho.zfar;
-				}
-			}, gltfCam.camera);
-
-			node->AddComponent(std::move(cam));
-		}
-
-		// Light component (KHR_lights_punctual)
-		if (gltfNode.lightIndex.has_value() && *gltfNode.lightIndex < Asset->lights.size())
-		{
-			fastgltf::Light& gltfLight = Asset->lights[*gltfNode.lightIndex];
-			
-			LightComponent light;
-
-			switch (gltfLight.type)
-			{
-				using enum fastgltf::LightType;
-			case Directional: light.LightType = LightComponent::Type::Directional; break;
-			case Point:       light.LightType = LightComponent::Type::Point;       break;
-			case Spot:        light.LightType = LightComponent::Type::Spot;        break;
-			}
-
-			light.Color     = SM::Vector3(gltfLight.color[0], gltfLight.color[1], gltfLight.color[2]);
-			light.Intensity = gltfLight.intensity;
-
-			if (gltfLight.range.has_value())
-			{
-				light.Range = static_cast<f32>(*gltfLight.range);
-			}
-
-			if (gltfLight.type == fastgltf::LightType::Spot)
-			{
-				light.InnerConeAngle = DirectX::XMConvertToDegrees(gltfLight.innerConeAngle.value_or(0.0f));
-				light.OuterConeAngle = DirectX::XMConvertToDegrees(gltfLight.outerConeAngle.value_or(0.7854f));
-			}
-
-			node->AddComponent(std::move(light));
-		}
-
-		// ── Recurse into children ──
-		SceneNode* rawNode = parent->AddChild(std::move(node));
-		for (auto childIdx : gltfNode.children)
-		{
-			ProcessNode(scene, rawNode, static_cast<u32>(childIdx));
-		}
 	}
 }

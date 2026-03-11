@@ -23,6 +23,7 @@ namespace fay
 	App::App()
 		: m_window(Window::Desc::Default())
 		, m_renderer(fay::Renderer::Create(GetPlatformAPI()))
+		, m_scene(std::make_unique<Scene>())
 	{
 		ZoneScoped;
 
@@ -100,7 +101,12 @@ namespace fay
 
 		auto meshes = sceneJson["meshes"].get<std::vector<std::string>>();
 
+		
 		// Simply load the first mesh as a scene
-		m_scene = m_gltfImporter->Load(meshes[0]);
+		m_scene->AddMeshCollection(m_gltfImporter->Load(meshes[0]));
+	}
+	
+	void App::RenderScene()
+	{
 	}
 }

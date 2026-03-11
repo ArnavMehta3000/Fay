@@ -19,6 +19,7 @@ namespace fay
 
 	private:
 		void LoadScene();
+		void RenderScene();
 
 	private:
 		Window                        m_window;

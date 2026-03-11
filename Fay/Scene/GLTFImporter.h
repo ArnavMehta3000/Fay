@@ -1,13 +1,23 @@
 #pragma once
 #include <memory>
 #include <filesystem>
+#include <vector>
+#include <string>
 
 namespace fay
 {
 	namespace fs = std::filesystem;
 
 	class Renderer;
-	class Scene;
+	class Mesh;
+	class Material;
+
+	struct MeshCollection
+	{
+		std::string SourcePath;
+		std::vector<std::unique_ptr<Mesh>> Meshes;
+		std::vector<std::unique_ptr<Material>> Materials;
+	};
 
 	class GLTFImporter
 	{
@@ -18,7 +28,7 @@ namespace fay
 		GLTFImporter(const GLTFImporter&) = delete;
 		GLTFImporter& operator=(const GLTFImporter&) = delete;
 
-		[[nodiscard]] std::unique_ptr<Scene> Load(const fs::path& path);
+		[[nodiscard]] std::unique_ptr<MeshCollection> Load(const fs::path& path);
 
 	private:
 		struct Impl;

@@ -4,7 +4,9 @@
 #include <unordered_map>
 #include <any>
 #include <typeindex>
+#include "Components/Transform.h"
 #include "Graphics/Mesh.h"
+#include "Scene/GLTFImporter.h"
 
 namespace fay
 {
@@ -17,13 +19,16 @@ namespace fay
 		using Children = std::vector<std::unique_ptr<SceneNode>>;
 
 	public:
-		explicit SceneNode(const std::string& name = "Node") : m_name(name) {}
+		explicit SceneNode(const std::string& name = "Node") : m_name(name), m_localTransform(SM::Vector3::Zero) {}
 
 		SceneNode* AddChild(std::unique_ptr<SceneNode> child);
 
 		[[nodiscard]] inline SceneNode* GetParent() const { return m_parent; }
 		[[nodiscard]] inline const Children& GetChildren() const { return m_children; }
 		[[nodiscard]] inline std::string_view GetName() const { return m_name; }
+
+		[[nodiscard]] inline Transform& GetLocalTransform() { return m_localTransform; }
+		[[nodiscard]] inline const Transform& GetLocalTransform() const { return m_localTransform; }
 
 		template<typename T>
 		T& AddComponent(T component = {})
@@ -53,26 +58,33 @@ namespace fay
 		}
 
 	public:
-		Transform LocalTransform;
 		SM::Matrix WorldMatrix = SM::Matrix::Identity;
 
 	private:
 		std::string  m_name;
+		Transform    m_localTransform;
 		SceneNode*   m_parent = nullptr;
 		Children     m_children;
 		ComponentMap m_components;
 	};
 
+	// MeshComponent now references a specific MeshCollection (by index into Scene::m_meshCollections)
+	// and a mesh within that collection.
+	struct SceneMeshComponent
+	{
+		u32 CollectionIndex = 0;  // index into Scene::m_meshCollections
+		u32 MeshIndex = 0;       // index into MeshCollection::Meshes
+	};
 
 	class Scene
 	{
 	public:
-		using MeshVisitor   = std::function<void(const SceneNode&, const Mesh&, const SM::Matrix&)>;
+		using MeshVisitor = std::function<void(const SceneNode&, const Mesh&, const SM::Matrix&)>;
 		using CameraVisitor = std::function<void(const SceneNode&, const CameraComponent&, const SM::Matrix&)>;
-		using LightVisitor  = std::function<void(const SceneNode&, const LightComponent&, const SM::Matrix&)>;
+		using LightVisitor = std::function<void(const SceneNode&, const LightComponent&, const SM::Matrix&)>;
 
 		Scene();
-		~Scene();		
+		~Scene();
 
 		Scene(const Scene&) = delete;
 		Scene& operator=(const Scene&) = delete;
@@ -82,10 +94,18 @@ namespace fay
 		[[nodiscard]] inline SceneNode* GetRoot() { return m_root.get(); }
 		[[nodiscard]] inline const SceneNode* GetRoot() const { return m_root.get(); }
 
-		inline void UpdateTransforms()                               { TraverseRecursive(m_root.get(), SM::Matrix::Identity); }
-		inline void ForEachMeshNode(const MeshVisitor& fn) const     { ForEachMeshNodeRecursive(m_root.get(), fn);            }
-		inline void ForEachCameraNode(const CameraVisitor& fn) const { ForEachCameraNodeRecursive(m_root.get(), fn);          }
-		inline void ForEachLightNode(const LightVisitor& fn) const   { ForEachLightNodeRecursive(m_root.get(), fn);           }
+		u32 AddMeshCollection(std::unique_ptr<MeshCollection> collection);
+
+		[[nodiscard]] inline const std::vector<std::unique_ptr<MeshCollection>>& GetMeshCollections() const { return m_meshCollections; }
+		[[nodiscard]] const MeshCollection* GetMeshCollection(u32 index) const;
+
+		[[nodiscard]] const Mesh* ResolveMesh(const SceneMeshComponent& comp) const;
+		[[nodiscard]] const std::vector<std::unique_ptr<Material>>* ResolveMaterials(const SceneMeshComponent& comp) const;
+
+		inline void UpdateTransforms() { TraverseRecursive(m_root.get(), SM::Matrix::Identity); }
+		inline void ForEachMeshNode(const MeshVisitor& fn) const { ForEachMeshNodeRecursive(m_root.get(), fn); }
+		inline void ForEachCameraNode(const CameraVisitor& fn) const { ForEachCameraNodeRecursive(m_root.get(), fn); }
+		inline void ForEachLightNode(const LightVisitor& fn) const { ForEachLightNodeRecursive(m_root.get(), fn); }
 
 	private:
 		static void TraverseRecursive(SceneNode* node, const SM::Matrix& parentWorld);
@@ -93,11 +113,8 @@ namespace fay
 		void ForEachCameraNodeRecursive(const SceneNode* node, const CameraVisitor& fn) const;
 		void ForEachLightNodeRecursive(const SceneNode* node, const LightVisitor& fn) const;
 
-	public:
-		std::vector<std::unique_ptr<Mesh>> Meshes;
-		std::vector<std::unique_ptr<Material>> Materials;
-
 	private:
 		std::unique_ptr<SceneNode> m_root;
+		std::vector<std::unique_ptr<MeshCollection>> m_meshCollections;
 	};
 }
