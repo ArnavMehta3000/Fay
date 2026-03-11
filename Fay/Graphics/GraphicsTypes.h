@@ -136,20 +136,6 @@ namespace fay
 		nvrhi::BindingSetHandle m_bindingSet;
 	};
 
-	struct Transform
-	{
-		SM::Vector3    Translation = SM::Vector3::Zero;
-		SM::Quaternion Rotation = SM::Quaternion::Identity;
-		SM::Vector3    Scale = SM::Vector3::One;
-
-		[[nodiscard]] inline SM::Matrix ToLocalMatrix() const
-		{
-			return SM::Matrix::CreateScale(Scale)
-				* SM::Matrix::CreateFromQuaternion(Rotation)
-				* SM::Matrix::CreateTranslation(Translation);
-		}
-	};
-
 	struct MeshComponent
 	{
 		u32 MeshIndex = 0;  // index into Scene::Meshes
