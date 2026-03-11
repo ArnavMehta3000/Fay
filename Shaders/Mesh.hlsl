@@ -40,6 +40,6 @@ float4 PSMain(VSOutput input) : SV_Target
     // Simple NdotL so you can see the shape
 	float NdotL = saturate(dot(N, LightDir));
 	float lighting = Ambient + (1.0 - Ambient) * NdotL;
-
-	return float4(normalColor * lighting, 1.0);
+	return float4(1, 1, 1, 1);
+	//return float4(normalColor * lighting, 1.0);
 }

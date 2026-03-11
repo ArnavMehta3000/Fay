@@ -1,8 +1,9 @@
 #pragma once
 #include <memory>
 #include "Platform/Window.h"
-#include "Graphics/RendererBase.h"
 #include "Graphics/Camera.h"
+#include "Graphics/Passes/ClearPass.h"
+#include "Graphics/Passes/GeometryPass.h"
 #include "Scene/GLTFImporter.h"
 #include "Scene/SceneGraph.h"
 
@@ -18,8 +19,9 @@ namespace fay
 		void OnWindowEvent(const SDL_Event&) override;
 
 	private:
+		void InitGraphics();
 		void LoadScene();
-		void RenderScene();
+		void Update();
 
 	private:
 		Window                        m_window;
@@ -28,5 +30,8 @@ namespace fay
 		std::unique_ptr<GLTFImporter> m_gltfImporter;
 
 		Camera m_camera;
+
+		std::unique_ptr<ClearPass> m_clearPass;
+		std::unique_ptr<GeometryPass> m_geometryPass;
 	};
 }

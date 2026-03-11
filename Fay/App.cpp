@@ -29,18 +29,7 @@ namespace fay
 
 		m_window.AddEventHook(this);
 
-		fay::RendererInitInfo info{};
-		info.DepthBufferFormat = nvrhi::Format::D32;
-		info.EnableWarningsAsErrors = false;
-		info.EnableNVRHIValidationLayer
-			= info.EnableDebugRuntime
-			= info.EnableGPUValidation = FAY_DEBUG;
-		info.LogBufferLifetime = true;
-
-		if (!m_renderer->Init(info, m_window))
-		{
-			Log::Error("Failed to initialize renderer!");
-		}
+		InitGraphics();
 
 		m_gltfImporter = std::make_unique<GLTFImporter>(m_renderer.get());
 
@@ -53,8 +42,10 @@ namespace fay
 	{
 		ZoneScoped;
 
-		m_scene = nullptr;
+		m_clearPass = nullptr;
+		m_geometryPass = nullptr;
 
+		m_scene = nullptr;
 		m_gltfImporter = nullptr;
 
 		Log::Info("Destroying application");
@@ -68,6 +59,8 @@ namespace fay
 
 		while (m_window.PumpEvents())
 		{
+			Update();
+
 			if (m_renderer->PreRender())
 			{
 				m_renderer->DoRenderPasses();  // Maybe rename this to RenderFrame?
@@ -90,6 +83,28 @@ namespace fay
 		}
 	}
 	
+	void App::InitGraphics()
+	{
+		fay::RendererInitInfo info{};
+		info.DepthBufferFormat = nvrhi::Format::D32;
+		info.EnableWarningsAsErrors = false;
+		info.EnableNVRHIValidationLayer
+			= info.EnableDebugRuntime
+			= info.EnableGPUValidation = FAY_DEBUG;
+		info.LogBufferLifetime = true;
+
+		if (!m_renderer->Init(info, m_window))
+		{
+			Log::Error("Failed to initialize renderer!");
+		}
+
+		m_clearPass = std::make_unique<ClearPass>(m_renderer.get(), nvrhi::Color(0.015f));
+		m_geometryPass = std::make_unique<GeometryPass>(m_renderer.get());
+		
+		m_renderer->AddRenderPassToBack(m_clearPass.get());
+		m_renderer->AddRenderPassToBack(m_geometryPass.get());
+	}
+
 	void App::LoadScene()
 	{
 		static constexpr auto sceneFile = "Assets/Scenes/Scene.json";
@@ -103,10 +118,29 @@ namespace fay
 
 		
 		// Simply load the first mesh as a scene
-		m_scene->AddMeshCollection(m_gltfImporter->Load(meshes[0]));
+		u32 collectionIndex = m_scene->AddMeshCollection(m_gltfImporter->Load(meshes[0]));
+
+		// Create mesh node
+		const auto* coll = m_scene->GetMeshCollection(collectionIndex);
+		for (u32 i = 0; i < static_cast<u32>(coll->Meshes.size()); ++i)
+		{
+			auto node = std::make_unique<SceneNode>(std::string(coll->Meshes[i]->GetName()));
+			node->AddComponent(SceneMeshComponent
+			{
+				.CollectionIndex = collectionIndex,
+				.MeshIndex = i
+			});
+			m_scene->GetRoot()->AddChild(std::move(node));
+		}
 	}
 	
-	void App::RenderScene()
+	void App::Update()
 	{
+		m_camera.Transform.Position = { 0.0f, 0.0f, -15.0f };
+		m_camera.LookAt(SM::Vector3::Zero);
+
+		m_scene->UpdateTransforms();
+		m_geometryPass->SetFrameData(m_scene.get(), m_camera);
+
 	}
 }

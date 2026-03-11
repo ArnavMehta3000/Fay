@@ -30,7 +30,9 @@ namespace fay
 	const MeshCollection* Scene::GetMeshCollection(u32 index) const
 	{
 		if (index < m_meshCollections.size())
+		{
 			return m_meshCollections[index].get();
+		}
 		return nullptr;
 	}
 
@@ -40,7 +42,9 @@ namespace fay
 		{
 			auto& collection = m_meshCollections[comp.CollectionIndex];
 			if (comp.MeshIndex < collection->Meshes.size())
+			{
 				return collection->Meshes[comp.MeshIndex].get();
+			}
 		}
 		return nullptr;
 	}
@@ -48,7 +52,9 @@ namespace fay
 	const std::vector<std::unique_ptr<Material>>* Scene::ResolveMaterials(const SceneMeshComponent& comp) const
 	{
 		if (comp.CollectionIndex < m_meshCollections.size())
+		{
 			return &m_meshCollections[comp.CollectionIndex]->Materials;
+		}
 		return nullptr;
 	}
 
