@@ -120,12 +120,19 @@ namespace fay
         virtual ~IRenderPass() = default;
 
         [[nodiscard]] inline Renderer* GetRenderer() const { return m_renderer; }
+        [[nodiscard]] inline nvrhi::IDevice* GetDevice() const;
 
         virtual std::string_view GetName() const = 0;
         virtual void OnRender(nvrhi::IFramebuffer* framebuffer) = 0;
+
+        // If true, will call render pass with a frame buffer that supports depth
         virtual bool SupportsDepthBuffer() = 0;
+
+        // Release all size dependant resource in prep for resize
         virtual void OnBackBufferResizeBegin() = 0;
-        virtual void OnBackBufferResizeEnd(const u32 width, const u32 height, const u32 sampleCount) = 0;
+
+        // Recreate all size dependant resources after resize
+        virtual void OnBackBufferResizeEnd(u32 width, u32 height, u32 sampleCount) = 0;
 
     private:
         Renderer* m_renderer;
@@ -180,4 +187,9 @@ namespace fay
         nvrhi::TextureHandle                  m_depthBuffer;
         std::list<IRenderPass*>               m_renderPasses;  // non-owning
     };
+
+    inline nvrhi::IDevice* fay::IRenderPass::GetDevice() const
+    {
+        return m_renderer->GetDevice();
+    }
 }

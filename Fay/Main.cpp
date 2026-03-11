@@ -47,9 +47,9 @@ public:
     bool SupportsDepthBuffer() override { return true; }
     void OnBackBufferResizeBegin() override {}
     void OnBackBufferResizeEnd(
-        [[maybe_unused]] const fay::u32 width, 
-        [[maybe_unused]] const fay::u32 height, 
-        [[maybe_unused]] const fay::u32 sampleCount) override {}
+        [[maybe_unused]] fay::u32 width, 
+        [[maybe_unused]] fay::u32 height, 
+        [[maybe_unused]] fay::u32 sampleCount) override {}
     
 private:
     nvrhi::Color m_clearColor;
@@ -242,9 +242,9 @@ public:
     }
     
     void OnBackBufferResizeEnd(
-        [[maybe_unused]] const fay::u32 width,
-        [[maybe_unused]] const fay::u32 height,
-        [[maybe_unused]] const fay::u32 sampleCount) override { }
+        [[maybe_unused]] fay::u32 width,
+        [[maybe_unused]] fay::u32 height,
+        [[maybe_unused]] fay::u32 sampleCount) override { }
 
 private:
     struct Vertex
