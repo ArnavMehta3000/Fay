@@ -17,6 +17,11 @@ namespace fay
             m_cmdList->open();
 
             nvrhi::utils::ClearColorAttachment(m_cmdList, framebuffer, 0, m_clearColor);
+            if (SupportsDepthBuffer())
+            {
+				nvrhi::utils::ClearDepthStencilAttachment(m_cmdList, framebuffer, 1.0f, 0u);
+            }
+
             m_cmdList->close();
 
             GetDevice()->executeCommandList(m_cmdList);
