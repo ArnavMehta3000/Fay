@@ -187,6 +187,7 @@ namespace fay
 				}
 
 				// Tangent
+				bool hasTangent = false;
 				if (fastgltf::Attribute* tanAttr = primitive.findAttribute("TANGENT"); tanAttr != primitive.attributes.end())
 				{
 					fastgltf::Accessor& acc = Asset->accessors[tanAttr->accessorIndex];
@@ -221,6 +222,16 @@ namespace fay
 					for (u32 i = 0; i < vertexCount; ++i)
 					{
 						allIndices.push_back(i);
+					}
+				}
+
+				if (!hasTangent)
+				{
+					// Since no tangents were found, generate them
+					//TODO: MikkTSpace tangent generation
+					for (u32 i = 0; i < vertexCount; ++i)
+					{
+						vertices[i].Tangent = SM::Vector4::UnitX;
 					}
 				}
 
