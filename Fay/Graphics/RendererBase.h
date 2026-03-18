@@ -24,6 +24,7 @@ namespace fay
 {
     class Window;
     class Renderer;
+    enum class API : u8;
 
 	struct RendererInitInfo
 	{
@@ -143,7 +144,7 @@ namespace fay
         , public nvrhi::IMessageCallback
     {
     public:
-        static Renderer* Create(nvrhi::GraphicsAPI api = nvrhi::GraphicsAPI::D3D12);
+        static Renderer* Create(API api);
         virtual ~Renderer() = default;
 
         bool Init(const RendererInitInfo& info, Window& targetWindow) override final;

@@ -15,10 +15,25 @@
 
 namespace fay
 {
-	Renderer* Renderer::Create(nvrhi::GraphicsAPI api)
+	namespace
+	{
+		nvrhi::GraphicsAPI ToNvrhiGraphicsAPI(API api)
+		{
+			switch (api)
+			{
+			case API::D3D12: return nvrhi::GraphicsAPI::D3D12;
+			case API::Vulkan: return nvrhi::GraphicsAPI::VULKAN;
+			default:
+				nvrhi::utils::NotSupported();
+				return nvrhi::GraphicsAPI::D3D12;
+			}
+		}
+	}
+
+	Renderer* Renderer::Create(API api)
 	{
 		ZoneScoped;
-		switch (api)
+		switch (ToNvrhiGraphicsAPI(api))
 		{
 #if FAY_HAS_D3D
 		case nvrhi::GraphicsAPI::D3D12: return new RendererDX12();

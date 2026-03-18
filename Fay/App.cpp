@@ -8,21 +8,9 @@
 
 namespace fay
 {
-	namespace
-	{
-		static constexpr inline nvrhi::GraphicsAPI GetPlatformAPI()
-		{
-#if FAY_HAS_D3D
-			return nvrhi::GraphicsAPI::D3D12;
-#else
-			return nvrhi::GraphicsAPI::VULKAN;
-#endif
-		}
-	}
-
-	App::App()
-		: m_window(Window::Desc::Default())
-		, m_renderer(fay::Renderer::Create(GetPlatformAPI()))
+	App::App(const App::Desc& desc)
+		: m_window(desc.WindowDesc)
+		, m_renderer(fay::Renderer::Create(desc.Api))
 		, m_scene(std::make_unique<Scene>())
 	{
 		ZoneScoped;
@@ -85,15 +73,7 @@ namespace fay
 	
 	void App::InitGraphics()
 	{
-		fay::RendererInitInfo info{};
-		info.DepthBufferFormat = nvrhi::Format::D32;
-		info.EnableWarningsAsErrors = false;
-		info.EnableNVRHIValidationLayer
-			= info.EnableDebugRuntime
-			= info.EnableGPUValidation = FAY_DEBUG;
-		info.LogBufferLifetime = true;
-
-		if (!m_renderer->Init(info, m_window))
+		if (!m_renderer->Init(m_desc.RendererInitInfo, m_window))
 		{
 			Log::Error("Failed to initialize renderer!");
 		}

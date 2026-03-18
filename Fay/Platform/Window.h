@@ -3,12 +3,33 @@
 #include <vector>
 #include "Common/Types.h"
 #include "Common/Macros.h"
+#include "Graphics/GraphicsConfig.h"
 
 struct SDL_Window;
 union SDL_Event;
 
 namespace fay
 {
+    enum class API : u8
+    {
+        Auto,
+        D3D12,
+		Vulkan
+    };
+
+    static constexpr inline API GetPlatformAPI(API api = API::Auto)
+    {
+        if (api == API::Auto)
+        {
+#if FAY_HAS_D3D
+            return API::D3D12;
+#else
+            return API::VULKAN;
+#endif
+        }
+        return api;
+    }
+
     struct IWindowEventHook
     {
         virtual void OnWindowEvent(const SDL_Event&) = 0;

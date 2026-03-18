@@ -19,7 +19,8 @@ namespace fay
 			Assert(m_window);
 		}
 		
-		u32 flags = SDL_WINDOW_VULKAN;
+		// Only init vulkan surface if we're using vulkan
+		u32 flags = GetPlatformAPI() == API::Vulkan ? SDL_WINDOW_VULKAN : 0;
 		if (desc.IsResizeable)
 		{
 			flags |= SDL_WINDOW_RESIZABLE;

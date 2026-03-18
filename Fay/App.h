@@ -12,7 +12,26 @@ namespace fay
 	class App : IWindowEventHook
 	{
 	public:
-		App();
+		struct Desc
+		{
+			Window::Desc WindowDesc;
+			API Api;
+			RendererInitInfo RendererInitInfo;
+
+			Desc()
+				: WindowDesc(Window::Desc::Default())
+				, Api(API::Auto)
+			{
+				RendererInitInfo.DepthBufferFormat = nvrhi::Format::D32;
+				RendererInitInfo.EnableWarningsAsErrors = false;
+				RendererInitInfo.EnableNVRHIValidationLayer
+					= RendererInitInfo.EnableDebugRuntime
+					= RendererInitInfo.EnableGPUValidation = FAY_DEBUG;
+				RendererInitInfo.LogBufferLifetime = true;
+			}
+		};
+	public:
+		App(const App::Desc& desc);
 		~App();
 
 		void Run();
@@ -24,6 +43,7 @@ namespace fay
 		void Update();
 
 	private:
+		App::Desc                     m_desc;
 		Window                        m_window;
 		std::unique_ptr<Renderer>     m_renderer;
 		std::unique_ptr<Scene>        m_scene;
