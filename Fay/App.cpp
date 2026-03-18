@@ -10,7 +10,7 @@ namespace fay
 {
 	App::App(const App::Desc& desc)
 		: m_window(desc.WindowDesc)
-		, m_renderer(fay::Renderer::Create(desc.Api))
+		, m_renderer(fay::Renderer::Create(desc.WindowDesc.Api))
 		, m_scene(std::make_unique<Scene>())
 	{
 		ZoneScoped;
@@ -76,6 +76,7 @@ namespace fay
 		if (!m_renderer->Init(m_desc.RendererInitInfo, m_window))
 		{
 			Log::Error("Failed to initialize renderer!");
+			Assert(false);
 		}
 
 		m_clearPass = std::make_unique<ClearPass>(m_renderer.get(), nvrhi::Color(0.015f));

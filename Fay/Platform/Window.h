@@ -40,6 +40,7 @@ namespace fay
     public:
         struct Desc
         {
+            API Api                  = API::Auto;
             std::string Name         = "Fay Renderer";
             std::pair<u32, u32> Size = { 1280, 720 };
             bool  IsResizeable       = true;

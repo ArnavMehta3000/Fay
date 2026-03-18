@@ -648,12 +648,12 @@ namespace fay
 			deviceDesc.transferQueueIndex = m_transferQueueFamily;
 		}
 
-		deviceDesc.instanceExtensions = vecInstanceExt.data();
-		deviceDesc.numInstanceExtensions = vecInstanceExt.size();
-		deviceDesc.deviceExtensions = vecDeviceExt.data();
-		deviceDesc.numDeviceExtensions = vecDeviceExt.size();
+		deviceDesc.instanceExtensions           = vecInstanceExt.data();
+		deviceDesc.numInstanceExtensions        = vecInstanceExt.size();
+		deviceDesc.deviceExtensions             = vecDeviceExt.data();
+		deviceDesc.numDeviceExtensions          = vecDeviceExt.size();
 		deviceDesc.bufferDeviceAddressSupported = m_bufferDeviceAddressSupported;
-		deviceDesc.logBufferLifetime = m_initInfo.LogBufferLifetime;
+		deviceDesc.logBufferLifetime            = false;//m_initInfo.LogBufferLifetime;
 
 		m_nvrhiDevice = nvrhi::vulkan::createDevice(deviceDesc);
 

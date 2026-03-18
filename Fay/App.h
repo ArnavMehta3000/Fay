@@ -15,12 +15,11 @@ namespace fay
 		struct Desc
 		{
 			Window::Desc WindowDesc;
-			API Api;
 			RendererInitInfo RendererInitInfo;
 
-			Desc()
+			Desc() 
 				: WindowDesc(Window::Desc::Default())
-				, Api(API::Auto)
+				, RendererInitInfo()
 			{
 				RendererInitInfo.DepthBufferFormat = nvrhi::Format::D32;
 				RendererInitInfo.EnableWarningsAsErrors = false;
