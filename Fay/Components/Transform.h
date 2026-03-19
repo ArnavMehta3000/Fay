@@ -8,6 +8,8 @@ namespace fay
 	class Transform
 	{
 	public:
+		Transform() = default;
+
 		Transform(SM::Vector3 position,
 			SM::Quaternion rotation = SM::Quaternion::Identity,
 			SM::Vector3 scale = SM::Vector3::One);

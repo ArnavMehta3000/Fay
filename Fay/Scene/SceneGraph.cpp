@@ -5,6 +5,12 @@ namespace fay
 	SceneNode* SceneNode::AddChild(std::unique_ptr<SceneNode> child)
 	{
 		child->m_parent = this;
+
+		if (!child->HasComponent<Transform>())
+		{
+			std::ignore = child->AddComponent<Transform>();
+		}
+
 		m_children.push_back(std::move(child));
 		return m_children.back().get();
 	}

@@ -123,11 +123,11 @@ namespace fay
 		// ── Write frame constants (b0) ──
 		{
 			FrameConstants fc{};
-			fc.ViewMatrix = m_camera.GetViewMatrix().Transpose();
-			fc.ProjMatrix = m_camera.GetProjectionMatrix().Transpose();
+			fc.ViewMatrix     = m_camera.GetViewMatrix().Transpose();
+			fc.ProjMatrix     = m_camera.GetProjectionMatrix().Transpose();
 			fc.ViewProjMatrix = m_camera.GetViewProjectionMatrix().Transpose();
-			fc.CameraPosition = m_camera.Transform.Position;
-			fc.Time = m_time;
+			fc.CameraPosition = m_camera.Transform.GetPosition();
+			fc.Time           = m_time;
 
 			m_cmdList->writeBuffer(m_frameCB, &fc, sizeof(fc));
 		}

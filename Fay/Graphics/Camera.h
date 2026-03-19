@@ -1,25 +1,12 @@
 #pragma once
-#include <SimpleMath.h>
+#include "Components/Transform.h"
 #include "Common/Types.h"
 
 namespace fay
 {
-	namespace SM = DirectX::SimpleMath;
-
 	class Camera
 	{
 	public:
-		struct Transform
-		{
-			SM::Vector3 Position = SM::Vector3::Zero;
-			SM::Quaternion Rotation = SM::Quaternion::Identity;
-
-			[[nodiscard]] SM::Matrix GetViewMatrix() const;
-			[[nodiscard]] SM::Vector3 Forward() const;
-			[[nodiscard]] SM::Vector3 Right() const;
-			[[nodiscard]] SM::Vector3 Up() const;
-		};
-
 		struct Film
 		{
 			f32 Width       = 36.0f;   // mm

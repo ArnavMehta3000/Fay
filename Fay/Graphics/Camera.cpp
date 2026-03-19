@@ -3,31 +3,7 @@
 #undef far
 
 namespace fay
-{
-	SM::Matrix Camera::Transform::GetViewMatrix() const
-	{
-		SM::Matrix rot = SM::Matrix::CreateFromQuaternion(Rotation);
-		SM::Matrix trans = SM::Matrix::CreateTranslation(Position);
-
-		return (rot * trans).Invert();
-	}
-	
-	SM::Vector3 Camera::Transform::Forward() const
-	{
-		return SM::Vector3::Transform(SM::Vector3::Forward, Rotation);
-	}
-	
-	SM::Vector3 Camera::Transform::Right() const
-	{
-		return SM::Vector3::Transform(SM::Vector3::Right, Rotation);
-	}
-	
-	SM::Vector3 Camera::Transform::Up() const
-	{
-		return SM::Vector3::Transform(SM::Vector3::Up, Rotation);
-	}
-	
-	
+{	
 	f32 Camera::Lens::GetFOV(f32 filmWidth) const
 	{
 		// PBRT FOV calculation
@@ -47,7 +23,9 @@ namespace fay
 
 	SM::Matrix Camera::GetViewMatrix() const
 	{
-		return Transform.GetViewMatrix();
+		SM::Matrix rot = SM::Matrix::CreateFromQuaternion(Transform.GetRotation());
+		SM::Matrix trans = SM::Matrix::CreateTranslation(Transform.GetPosition());
+		return (rot * trans).Invert();
 	}
 
 	SM::Matrix Camera::GetProjectionMatrix() const
@@ -68,14 +46,13 @@ namespace fay
 
 	void Camera::LookAt(const SM::Vector3 target)
 	{
-		SM::Vector3 forward = (target - Transform.Position);
+		SM::Vector3 forward = target - Transform.GetPosition();
 		forward.Normalize();
 
-		Transform.Rotation = SM::Quaternion::CreateFromRotationMatrix(
-			SM::Matrix::CreateWorld(
-				Transform.Position,
-				forward,
-				SM::Vector3::Up)
+		Transform.SetRotation(
+			SM::Quaternion::CreateFromRotationMatrix(
+				SM::Matrix::CreateWorld(Transform.GetPosition(), forward, SM::Vector3::Up)
+			)
 		);
 	}
 }

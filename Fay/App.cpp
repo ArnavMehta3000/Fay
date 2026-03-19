@@ -2,6 +2,7 @@
 #include "Common/Profiling.h"
 #include "Common/Assert.h"
 #include "Common/Log.h"
+#include "Platform/Timer.h"
 #include <fstream>
 #include <SDL3/SDL.h>
 #include <nlohmann/json.hpp>
@@ -12,10 +13,14 @@ namespace fay
 		: m_window(desc.WindowDesc)
 		, m_renderer(fay::Renderer::Create(desc.WindowDesc.Api))
 		, m_scene(std::make_unique<Scene>())
+		, m_cameraController(m_camera, m_window)
 	{
 		ZoneScoped;
 
+		m_camera.Transform.SetPosition({ 0.0f, 0.0f, -15.0f });
+
 		m_window.AddEventHook(this);
+		m_window.AddEventHook(&m_cameraController);
 
 		InitGraphics();
 
@@ -45,9 +50,14 @@ namespace fay
 	{
 		Log::Info("Running application");
 
+		Timer timer;
+
 		while (m_window.PumpEvents())
 		{
-			Update();
+			const f32 dt = timer.Tick();
+			timer.UpdateFPSCounter();
+
+			Update(dt);
 
 			if (m_renderer->PreRender())
 			{
@@ -115,13 +125,11 @@ namespace fay
 		}
 	}
 	
-	void App::Update()
+	void App::Update([[maybe_unused]] const f32 dt)
 	{
-		m_camera.Transform.Position = { 0.0f, 0.0f, -15.0f };
-		m_camera.LookAt(SM::Vector3::Zero);
+		m_cameraController.Update(dt);
 
 		m_scene->UpdateTransforms();
 		m_geometryPass->SetFrameData(m_scene.get(), m_camera);
-
 	}
 }

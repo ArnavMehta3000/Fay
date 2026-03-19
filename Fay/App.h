@@ -2,6 +2,7 @@
 #include <memory>
 #include "Platform/Window.h"
 #include "Graphics/Camera.h"
+#include "Scene/CameraController.h"
 #include "Graphics/Passes/ClearPass.h"
 #include "Graphics/Passes/GeometryPass.h"
 #include "Scene/GLTFImporter.h"
@@ -39,7 +40,7 @@ namespace fay
 	private:
 		void InitGraphics();
 		void LoadScene();
-		void Update();
+		void Update(const f32 dt);
 
 	private:
 		App::Desc                     m_desc;
@@ -49,6 +50,7 @@ namespace fay
 		std::unique_ptr<GLTFImporter> m_gltfImporter;
 
 		Camera m_camera;
+		CameraController m_cameraController;
 
 		std::unique_ptr<ClearPass> m_clearPass;
 		std::unique_ptr<GeometryPass> m_geometryPass;
