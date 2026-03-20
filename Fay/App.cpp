@@ -19,8 +19,6 @@ namespace fay
 	{
 		ZoneScoped;
 
-		m_camera.Transform.SetPosition({ 0.0f, 0.0f, -15.0f });
-
 		m_window.AddEventHook(this);
 		m_window.AddEventHook(&m_cameraController);
 
@@ -91,6 +89,12 @@ namespace fay
 				using enum nvrhi::RasterFillMode;
 				m_geometryPass->SetFillMode((m_geometryPass->GetFillMode() == Fill) ? Wireframe : Fill);
 			}
+
+			if (e.key.scancode == SDL_SCANCODE_SPACE)  // Reset camera to orit around the root
+			{
+				const Transform& target = m_scene->GetRoot()->GetLocalTransform();
+				m_cameraController.FrameTarget(target.GetPosition());
+			}
 			break;
 		}
 	}
@@ -144,8 +148,6 @@ namespace fay
 		m_scene->UpdateTransforms();
 		
 		// Get the first child of the root node as the target
-		const Transform& target = m_scene->GetRoot()->GetChildren()[0]->GetLocalTransform();
-		m_cameraController.FrameTarget(target.GetPosition());
 		m_cameraController.Update(dt);
 
 		m_geometryPass->SetFrameData(m_scene.get(), m_camera);

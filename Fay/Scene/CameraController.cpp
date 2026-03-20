@@ -11,7 +11,6 @@ namespace fay
 		: m_camera(&camera)
 		, m_window(&window)
 	{
-		RecalculateOrbitFromCamera();
 	}
 
 	void CameraController::OnWindowEvent(const SDL_Event& e)
@@ -66,23 +65,41 @@ namespace fay
 		ApplyOrbitToCamera();
 	}
 	
+	void CameraController::InitializeFromCamera()
+	{
+		const SM::Vector3 fwd = m_camera->Transform.Forward();
+		
+		m_yaw         = std::atan2(fwd.x, fwd.z);
+		m_pitch       = std::asin(std::clamp(fwd.y, -1.0f, 1.0f));
+		m_focusPoint  = m_camera->Transform.GetPosition() + fwd * m_orbitDistance;
+		m_initialized = true;
+	}
+
 	void CameraController::HandleMouseButtonDown(const SDL_Event& e)
 	{
 		m_lastMouseX = e.button.x;
 		m_lastMouseY = e.button.y;
 
+		if (!m_initialized)
+		{
+			// First interaction ever — extract angles from camera
+			InitializeFromCamera();
+		}
+
 		switch (e.button.button)
 		{
 		case SDL_BUTTON_LEFT:
 			if (m_activeMode == Mode::None)
+			{
+				RecalculateOrbitFromCamera();
 				m_activeMode = Mode::Orbit;
+			}
 			break;
 
 		case SDL_BUTTON_RIGHT:
 			if (m_activeMode == Mode::None)
 			{
 				m_activeMode = Mode::Fly;
-				// Sync yaw/pitch from current camera orientation so there is no snap when entering fly mode.
 				RecalculateOrbitFromCamera();
 				SDL_SetWindowRelativeMouseMode(m_window->GetSDL(), true);
 			}
@@ -90,7 +107,10 @@ namespace fay
 
 		case SDL_BUTTON_MIDDLE:
 			if (m_activeMode == Mode::None)
+			{
+				RecalculateOrbitFromCamera();
 				m_activeMode = Mode::Pan;
+			}
 			break;
 
 		default: break;
@@ -100,24 +120,22 @@ namespace fay
 	void CameraController::HandleMouseButtonUp(const SDL_Event& e)
 	{
 		auto modeForButton = [](u8 button) -> Mode
+		{
+			switch (button)
 			{
-				switch (button)
-				{
-				case SDL_BUTTON_LEFT:   return Mode::Orbit;
-				case SDL_BUTTON_RIGHT:  return Mode::Fly;
-				case SDL_BUTTON_MIDDLE: return Mode::Pan;
-				default:                return Mode::None;
-				}
-			};
+			case SDL_BUTTON_LEFT:   return Mode::Orbit;
+			case SDL_BUTTON_RIGHT:  return Mode::Fly;
+			case SDL_BUTTON_MIDDLE: return Mode::Pan;
+			default:                return Mode::None;
+			}
+		};
 
 		if (modeForButton(e.button.button) == m_activeMode)
 		{
 			if (m_activeMode == Mode::Fly)
 			{
 				SDL_SetWindowRelativeMouseMode(m_window->GetSDL(), false);
-				// Sync orbit state back from the free-look position
-				m_focusPoint = m_camera->Transform.GetPosition()
-					+ m_camera->Transform.Forward() * m_orbitDistance;
+				RecalculateOrbitFromCamera();
 			}
 
 			m_activeMode = Mode::None;
@@ -155,7 +173,8 @@ namespace fay
 		else
 		{
 			// Dolly zoom — velocity-based for smoothness
-			m_zoomVelocity -= scroll * m_orbitDistance * m_settings.ZoomSensitivity;
+			static constexpr f32 localOrbitZoomMultiplier = 7.0f;  // Adding this since orbit camera zoom feels too small
+			m_zoomVelocity -= scroll * m_orbitDistance * m_settings.ZoomSensitivity * localOrbitZoomMultiplier;
 		}
 	}
 	
@@ -252,14 +271,10 @@ namespace fay
 	
 	void CameraController::RecalculateOrbitFromCamera()
 	{
-		// Derive yaw/pitch from the camera's current orientation
-		const SM::Vector3 fwd = m_camera->Transform.Forward();
-
-		m_yaw   = std::atan2(fwd.x, fwd.z);                  // heading
-		m_pitch = std::asin(std::clamp(fwd.y, -1.0f, 1.0f)); // elevation
-
-		// Place focus point in front of the camera at the current orbit distance
-		m_focusPoint = m_camera->Transform.GetPosition() + fwd * m_orbitDistance;
+		const SM::Vector3 fwd  = m_camera->Transform.Forward();
+		const SM::Vector3& pos = m_camera->Transform.GetPosition();
+		
+		m_focusPoint = pos + fwd * m_orbitDistance;
 	}
 	
 	void CameraController::ApplyOrbitToCamera()

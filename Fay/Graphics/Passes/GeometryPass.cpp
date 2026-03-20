@@ -124,7 +124,6 @@ namespace fay
 		{
 			CreatePipeline(framebuffer);
 		}
-
 		m_cmdList->open();
 
 		// Update frame constants (b0)
@@ -147,7 +146,7 @@ namespace fay
 			static_cast<f32>(fbInfo.height));
 
 		// Draw each mesh node
-		m_scene->ForEachMeshNode([&](const SceneNode& node, const Mesh& mesh, const SM::Matrix& worldMatrix)
+		m_scene->ForEachMeshNode([&]([[maybe_unused]] const SceneNode& node, const Mesh& mesh, const SM::Matrix& worldMatrix)
 		{
 			// Write per-object constants (b1)
 			ObjectConstants oc
@@ -181,7 +180,7 @@ namespace fay
 			m_cmdList->setGraphicsState(state);
 
 			// Draw each submesh
-			for (const auto& sub : mesh.GetSubMeshes())
+			for (const SubMesh& sub : mesh.GetSubMeshes())
 			{
 				nvrhi::DrawArguments args;
 				args.setVertexCount(sub.IndexCount)

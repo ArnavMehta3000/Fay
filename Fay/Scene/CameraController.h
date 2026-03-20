@@ -53,6 +53,8 @@ namespace fay
 		[[nodiscard]] inline f32 GetOrbitDistance() const        { return m_orbitDistance; }
 
 	private:
+		void InitializeFromCamera();
+
 		void HandleMouseButtonDown(const SDL_Event& e);
 		void HandleMouseButtonUp(const SDL_Event& e);
 		void HandleMouseMotion(const SDL_Event& e);
@@ -73,18 +75,30 @@ namespace fay
 	private:
 		static constexpr std::size_t KEY_COUNT = 512;
 
-		Settings    m_settings;
-		Camera*     m_camera        = nullptr;
-		Window*     m_window        = nullptr;
-		Mode        m_activeMode    = Mode::None;
-		SM::Vector3 m_focusPoint    = SM::Vector3::Zero;
-		f32         m_orbitDistance = 5.0f;
-		f32         m_yaw           = 0.0f;
-		f32         m_pitch         = 0.0f;
-		f32         m_zoomVelocity  = 0.0f;
-		SM::Vector3 m_flyVelocity   = SM::Vector3::Zero;
-		f32         m_lastMouseX    = 0.0f;
-		f32         m_lastMouseY    = 0.0f;
+		Settings               m_settings;
+		Camera*                m_camera        = nullptr;
+		Window*                m_window        = nullptr;
+		Mode                   m_activeMode    = Mode::None;
+		bool                   m_initialized   = false;
+		SM::Vector3            m_focusPoint    = SM::Vector3::Zero;
+		f32                    m_orbitDistance = 5.0f;
+		f32                    m_yaw           = 0.0f;
+		f32                    m_pitch         = 0.0f;
+		f32                    m_zoomVelocity  = 0.0f;
+		SM::Vector3            m_flyVelocity   = SM::Vector3::Zero;
+		f32                    m_lastMouseX    = 0.0f;
+		f32                    m_lastMouseY    = 0.0f;
 		std::bitset<KEY_COUNT> m_keysDown{};
 	};
+
+	inline std::string_view ToString(CameraController::Mode mode) noexcept
+	{
+		switch (mode)
+		{
+			case CameraController::Mode::Orbit:  return "Orbit";
+			case CameraController::Mode::Fly:    return "Fly";
+			case CameraController::Mode::Pan:    return "Pan";
+			default:                             return "None";
+		}
+	}
 }
