@@ -14,7 +14,10 @@ namespace fay
 		explicit GeometryPass(Renderer* renderer);
 		~GeometryPass() override = default;
 
+		[[nodiscard]] inline nvrhi::RasterFillMode GetFillMode() const { return m_fillMode; }
+
 		void SetFrameData(const Scene* scene, const Camera& camera);
+		void SetFillMode(nvrhi::RasterFillMode fillMode);
 
 		std::string_view GetName() const override { return "GeometryPass"; }
 		void OnRender(nvrhi::IFramebuffer* framebuffer) override;
@@ -24,6 +27,10 @@ namespace fay
 
 	private:
 		void CreatePipeline(nvrhi::IFramebuffer* framebuffer);
+		void LoadShaders();
+		void CreateInputLayout();
+		void CreateConstantBuffers();
+		void CreateCBBindings();
 
 	private:
 		// CB structs matching Common.hlsli
@@ -48,7 +55,8 @@ namespace fay
 	private:
 		const Scene* m_scene = nullptr;
 		Camera m_camera;
-		f32 m_time = 0.0f;
+
+		nvrhi::RasterFillMode m_fillMode = nvrhi::RasterFillMode::Solid;
 
 		nvrhi::CommandListHandle      m_cmdList;
 		nvrhi::GraphicsPipelineHandle m_pipeline;

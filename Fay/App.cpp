@@ -9,6 +9,8 @@
 
 namespace fay
 {
+	Timer g_timer("Fay Global Timer");
+
 	App::App(const App::Desc& desc)
 		: m_window(desc.WindowDesc)
 		, m_renderer(fay::Renderer::Create(desc.WindowDesc.Api))
@@ -49,13 +51,12 @@ namespace fay
 	void App::Run()
 	{
 		Log::Info("Running application");
-
-		Timer timer;
+		g_timer.Reset();
 
 		while (m_window.PumpEvents())
 		{
-			const f32 dt = timer.Tick();
-			timer.UpdateFPSCounter();
+			const f32 dt = g_timer.Tick();
+			g_timer.UpdateFPSCounter();
 
 			Update(dt);
 
@@ -64,7 +65,7 @@ namespace fay
 				m_renderer->DoRenderPasses();  // Maybe rename this to RenderFrame?
 				Assert(m_renderer->PostRender());
 			}
-
+			
 			::SDL_UpdateWindowSurface(m_window.GetSDL());
 
 			FrameMark;
@@ -77,6 +78,19 @@ namespace fay
 		{
 		case SDL_EVENT_WINDOW_RESIZED:
 			m_renderer->Resize();  // Renderer will query the window size internally
+			break;
+
+		case SDL_EVENT_KEY_DOWN:
+			if (e.key.scancode == SDL_SCANCODE_F)  // Print fps info
+			{
+				Log::Info("FPS: {} | Frame Count: {}", g_timer.FPS(), g_timer.FrameCount());
+			}
+
+			if (e.key.scancode == SDL_SCANCODE_P)  // Toggle wireframe
+			{
+				using enum nvrhi::RasterFillMode;
+				m_geometryPass->SetFillMode((m_geometryPass->GetFillMode() == Fill) ? Wireframe : Fill);
+			}
 			break;
 		}
 	}
