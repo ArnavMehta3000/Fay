@@ -14,7 +14,7 @@ set_warnings("all", "extra")
 
 set_policy("build.warning", true)
 set_policy("run.autobuild", true)
-set_policy("package.install_locally", true)
+set_policy("package.install_locally", false)
 
 add_rules("plugin.compile_commands.autoupdate", { outputdir = ".vscode", lsp = "clangd" })
 
