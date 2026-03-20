@@ -148,6 +148,7 @@ function main()
 			table.insert(dxc_jobs,
 			{
 				name        = entry.source_file .. " -> " .. entry.output_file,
+				output_base = path.basename(entry.output_file),
 				stdout_file = stdout_file,
 				stderr_file = stderr_file,
 				proc        = process.openv(dxc.program, args,
@@ -189,7 +190,13 @@ function main()
 			end
 		else
 			has_errors = true
-			cprint("$\t{red}[Failed] %s (exit code: %d | status: %d)${clear}", job.name, ok, status)
+			cprint("\t${red}[Failed] %s (exit code: %d | status: %d)${clear}", job.name, ok, status)
+
+			-- Invalidate dependency file so next build will recompile this shader
+			local dep_file = path.join(dep_dir, job.output_base .. ".d")
+			if os.isfile(dep_file) then
+				os.rm(dep_file)
+			end
 
 			if os.isfile(job.stderr_file) then
 				local content = io.readfile(job.stderr_file)

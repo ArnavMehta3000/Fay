@@ -1,5 +1,4 @@
-
-cbuffer FrameConstants : register(b0)
+struct FrameConstantsCB
 {
 	float4x4 ViewMatrix;
 	float4x4 ProjMatrix;
@@ -8,8 +7,8 @@ cbuffer FrameConstants : register(b0)
 	float Time;
 };
 
-cbuffer ObjectConstants : register(b1)
+struct ObjectConstantsCB
 {
-	float4x4 WorldMatrix;
-	float4x4 NormalMatrix; // inverse-transpose of WorldMatrix (upper 3x3, padded to 4x4)
+    float4x4 WorldMatrix;
+    float4x4 NormalMatrix; // inverse-transpose of WorldMatrix (upper 3x3, padded to 4x4)
 };
