@@ -127,9 +127,13 @@ namespace fay
 	
 	void App::Update([[maybe_unused]] const f32 dt)
 	{
+		m_scene->UpdateTransforms();
+		
+		// Get the first child of the root node as the target
+		const Transform& target = m_scene->GetRoot()->GetChildren()[0]->GetLocalTransform();
+		m_cameraController.FrameTarget(target.GetPosition());
 		m_cameraController.Update(dt);
 
-		m_scene->UpdateTransforms();
 		m_geometryPass->SetFrameData(m_scene.get(), m_camera);
 	}
 }
