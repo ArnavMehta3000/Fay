@@ -1,4 +1,5 @@
 #include "Scene/SceneGraph.h"
+#include "Common/Log.h"
 
 namespace fay
 {
@@ -64,6 +65,48 @@ namespace fay
 		return nullptr;
 	}
 
+	void Scene::PrintSceneTree()
+	{
+		std::stringstream ss;
+
+		ss << "Scene Tree:" << std::endl;
+
+		PrintSceneTreeInternal(ss, m_root.get());
+
+		ss << std::endl;
+		Log::Info("{}", ss.str());
+	}
+
+	void Scene::PrintSceneTreeInternal(std::stringstream& out, const SceneNode* node)
+	{
+		auto attachComponentInfo = [](std::stringstream& out, const SceneNode* node)
+		{
+			out << "[";
+
+			if (node->HasComponent<SceneMeshComponent>())
+			{
+				out<< "Mesh";
+			}
+
+			//TODO: add other components here
+			out << "]";
+		};
+
+		out << node->GetName() << " ";
+		attachComponentInfo(out, node);
+		out << std::endl;
+
+		if (node->HasChildren())
+		{
+			auto& children = node->GetChildren();
+			for (auto& child : children)
+			{
+				out << "\t";
+				PrintSceneTreeInternal(out, child.get());
+			}			
+		}
+	}
+
 	void Scene::TraverseRecursive(SceneNode* node, const SM::Matrix& parentWorld)
 	{
 		node->WorldMatrix = node->GetLocalTransform().ToLocalMatrix() * parentWorld;
@@ -89,20 +132,6 @@ namespace fay
 		for (auto& child : children)
 		{
 			ForEachMeshNodeRecursive(child.get(), fn);
-		}
-	}
-
-	void Scene::ForEachCameraNodeRecursive(const SceneNode* node, const CameraVisitor& fn) const
-	{
-		if (auto* cc = node->GetComponent<CameraComponent>())
-		{
-			fn(*node, *cc, node->WorldMatrix);
-		}
-
-		const auto& children = node->GetChildren();
-		for (auto& child : children)
-		{
-			ForEachCameraNodeRecursive(child.get(), fn);
 		}
 	}
 

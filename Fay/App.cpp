@@ -141,6 +141,8 @@ namespace fay
 			});
 			m_scene->GetRoot()->AddChild(std::move(node));
 		}
+
+		m_scene->PrintSceneTree();
 	}
 	
 	void App::Update([[maybe_unused]] const f32 dt)

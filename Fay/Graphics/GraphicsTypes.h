@@ -141,29 +141,6 @@ namespace fay
 		u32 MeshIndex = 0;  // index into Scene::Meshes
 	};
 
-	struct CameraComponent
-	{
-		enum class Type { Perspective, Orthographic };
-		Type CameraType = Type::Perspective;
-
-		f32 FOV = 45.0f;   // degrees
-		f32 NearPlane = 0.1f;
-		f32 FarPlane = 1000.0f;
-
-		f32 OrthoWidth = 10.0f;
-		f32 OrthoHeight = 10.0f;
-
-		[[nodiscard]] SM::Matrix GetProjectionMatrix(f32 aspectRatio) const
-		{
-			if (CameraType == Type::Perspective)
-			{
-				return SM::Matrix::CreatePerspectiveFieldOfView(
-					DirectX::XMConvertToRadians(FOV), aspectRatio, NearPlane, FarPlane);
-			}
-			return SM::Matrix::CreateOrthographic(OrthoWidth, OrthoHeight, NearPlane, FarPlane);
-		}
-	};
-
 	struct LightComponent
 	{
 		enum class Type { Directional, Point, Spot };
