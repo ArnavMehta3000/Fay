@@ -162,8 +162,8 @@ namespace fay
 			m_cmdList->writeBuffer(m_objectCB, &oc, sizeof(oc));
 
 			// Build graphics state
-			nvrhi::GraphicsState state;
-			state.setPipeline(m_pipeline)
+			auto state = nvrhi::GraphicsState()
+				.setPipeline(m_pipeline)
 				.setFramebuffer(framebuffer)
 				.setViewport(nvrhi::ViewportState()
 					.addViewportAndScissorRect(viewport))

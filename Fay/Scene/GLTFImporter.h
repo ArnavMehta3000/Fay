@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <vector>
 #include <string>
+#include "Graphics/GraphicsTypes.h"
 
 namespace fay
 {
@@ -17,6 +18,7 @@ namespace fay
 		std::string SourcePath;
 		std::vector<std::unique_ptr<Mesh>> Meshes;
 		std::vector<std::unique_ptr<Material>> Materials;
+		std::vector<TextureResource> Textures;
 	};
 
 	class GLTFImporter

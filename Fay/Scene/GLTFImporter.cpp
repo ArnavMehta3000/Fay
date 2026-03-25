@@ -90,14 +90,16 @@ namespace fay
 
 		m_impl->Asset = &asset.get();
 
-		auto collection = m_impl->BuildMeshCollection();
+		std::unique_ptr<MeshCollection> collection = m_impl->BuildMeshCollection();
+		
 		collection->SourcePath = path.string();
+		collection->Textures = std::move(m_impl->TextureCache);
 
 		m_impl->Asset = nullptr;
 		m_impl->TextureCache.clear();
 
-		Log::Info("Loaded glTF: {} meshes, {} materials",
-			collection->Meshes.size(), collection->Materials.size());
+		Log::Info("Loaded glTF: {} meshes, {} materials, {} textures",
+			collection->Meshes.size(), collection->Materials.size(), collection->Textures.size());
 
 		return collection;
 	}
@@ -119,6 +121,7 @@ namespace fay
 	{
 		ZoneScoped;
 
+		// For-each mesh
 		for (fastgltf::Mesh& gltfMesh : Asset->meshes)
 		{
 			auto mesh = std::make_unique<Mesh>();
@@ -127,11 +130,12 @@ namespace fay
 			std::vector<Vertex> allVertices;
 			std::vector<u32> allIndices;
 
+			// For-each primitive in mesh
 			for (auto& primitive : gltfMesh.primitives)
 			{
 				SubMesh sub;
-				sub.VertexOffset = static_cast<u32>(allVertices.size());
-				sub.IndexOffset = static_cast<u32>(allIndices.size());
+				sub.VertexOffset  = static_cast<u32>(allVertices.size());
+				sub.IndexOffset   = static_cast<u32>(allIndices.size());
 				sub.MaterialIndex = primitive.materialIndex.has_value() ? static_cast<i32>(*primitive.materialIndex) : -1;
 
 				// Positions
@@ -168,7 +172,7 @@ namespace fay
 				}
 				else
 				{
-					Log::Warn("Primitive in mesh '{}' has no NORMAL attribute, skipping", mesh->m_name);
+					Log::Warn("Primitive in mesh '{}' has no NORMAL attribute", mesh->m_name);
 				}
 
 				// UV
@@ -183,7 +187,7 @@ namespace fay
 				}
 				else
 				{
-					Log::Warn("Primitive in mesh '{}' has no TEXCOORD_0 attribute, skipping", mesh->m_name);
+					Log::Warn("Primitive in mesh '{}' has no TEXCOORD_0 attribute", mesh->m_name);
 				}
 
 				// Tangent
@@ -196,10 +200,11 @@ namespace fay
 						{
 							vertices[i].Tangent = SM::Vector4(t.x(), t.y(), t.z(), t.w());
 						});
+					hasTangent = true;
 				}
 				else
 				{
-					Log::Warn("Primitive in mesh '{}' has no TANGENT attribute, skipping", mesh->m_name);
+					Log::Warn("Primitive in mesh '{}' has no TANGENT attribute", mesh->m_name);
 				}
 
 				// Indices
@@ -429,11 +434,12 @@ namespace fay
 		}
 
 		// Create GPU texture
-		nvrhi::TextureDesc texDesc;
-		texDesc.setWidth(width)
+		auto texDesc = nvrhi::TextureDesc()
+			.setDimension(nvrhi::TextureDimension::Texture2D)
+			.setWidth(width)
 			.setHeight(height)
-			.setFormat(nvrhi::Format::RGBA8_UNORM)
-			.setDebugName(std::string(gltfImage.name.empty() ? "Texture" : gltfImage.name))
+			.setFormat(nvrhi::Format::SRGBA8_UNORM)
+			.setDebugName(std::string(gltfImage.name.empty() ? "GLTFTexture" : gltfImage.name))
 			.setInitialState(nvrhi::ResourceStates::CopyDest)
 			.setKeepInitialState(false);
 
