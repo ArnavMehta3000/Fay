@@ -101,6 +101,8 @@ namespace fay
 	
 	void App::InitGraphics()
 	{
+		ZoneScoped;
+
 		if (!m_renderer->Init(m_desc.RendererInitInfo, m_window))
 		{
 			Log::Error("Failed to initialize renderer!");
@@ -116,40 +118,45 @@ namespace fay
 
 	void App::LoadScene()
 	{
-		static constexpr auto sceneFile = "Assets/Scenes/Scene.json";
-		
+		ZoneScoped;
+
 		using json = nlohmann::json;
+		
+		static constexpr auto sceneFile = "Assets/Scenes/Scene.json";
 
 		std::ifstream f(sceneFile);
 		json sceneJson = json::parse(f);
 
 		auto meshes = sceneJson["meshes"].get<std::vector<std::string>>();
 
-		
-		// Simply load the first mesh as a scene
-		u32 collectionIndex = m_scene->AddMeshCollection(m_gltfImporter->Load(meshes[0]));
-
-		// Create mesh node
-		const auto* coll = m_scene->GetMeshCollection(collectionIndex);
-		for (u32 i = 0; i < static_cast<u32>(coll->Meshes.size()); ++i)
+		// Load all meshes
+		for (const std::string& meshStr : meshes)
 		{
-			auto node = std::make_unique<SceneNode>(std::string(coll->Meshes[i]->GetName()));
-			node->AddComponent(SceneMeshComponent
+			std::unique_ptr<MeshCollection> loadedCollection = m_gltfImporter->Load(meshStr);
+			const MeshCollection* collection = loadedCollection.get();
+
+			const u32 collectionIdx = m_scene->AddMeshCollection(std::move(loadedCollection));
+
+			// Create a node for each mesh in the collection
+			for (u32 i = 0; i < static_cast<u32>(collection->Meshes.size()); ++i)
 			{
-				.CollectionIndex = collectionIndex,
-				.MeshIndex = i
-			});
-			m_scene->GetRoot()->AddChild(std::move(node));
+				auto node = std::make_unique<SceneNode>(std::string(collection->Meshes[i]->GetName()));
+				node->AddComponent(SceneMeshComponent{ .CollectionIndex = collectionIdx, .MeshIndex = i });
+
+				m_scene->GetRoot()->AddChild(std::move(node));
+			}
 		}
 
+		m_cameraController.FrameTarget(m_scene->GetRoot()->GetLocalTransform().GetPosition());
 		m_scene->PrintSceneTree();
 	}
 	
 	void App::Update([[maybe_unused]] const f32 dt)
 	{
+		ZoneScoped;
+		
 		m_scene->UpdateTransforms();
 		
-		// Get the first child of the root node as the target
 		m_cameraController.Update(dt);
 
 		m_geometryPass->SetFrameData(m_scene.get(), m_camera);

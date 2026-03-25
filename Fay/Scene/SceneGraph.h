@@ -28,6 +28,7 @@ namespace fay
 		[[nodiscard]] inline const Children& GetChildren() const { return m_children; }
 		[[nodiscard]] inline std::string_view GetName() const { return m_name; }
 		[[nodiscard]] inline bool HasChildren() const { return !m_children.empty(); }
+		[[nodiscard]] inline bool HasAnyComponent() const { return !m_components.empty(); }
 
 		[[nodiscard]] inline Transform& GetLocalTransform() { return m_localTransform; }
 		[[nodiscard]] inline const Transform& GetLocalTransform() const { return m_localTransform; }
@@ -58,6 +59,7 @@ namespace fay
 		{
 			return m_components.contains(std::type_index(typeid(T)));
 		}
+
 	public:
 		SM::Matrix WorldMatrix = SM::Matrix::Identity;
 
@@ -81,7 +83,6 @@ namespace fay
 	{
 	public:
 		using MeshVisitor = std::function<void(const SceneNode&, const Mesh&, const SM::Matrix&)>;
-		using LightVisitor = std::function<void(const SceneNode&, const LightComponent&, const SM::Matrix&)>;
 
 		Scene();
 		~Scene();
@@ -104,7 +105,6 @@ namespace fay
 
 		inline void UpdateTransforms() { TraverseRecursive(m_root.get(), SM::Matrix::Identity); }
 		inline void ForEachMeshNode(const MeshVisitor& fn) const { ForEachMeshNodeRecursive(m_root.get(), fn); }
-		inline void ForEachLightNode(const LightVisitor& fn) const { ForEachLightNodeRecursive(m_root.get(), fn); }
 
 		void PrintSceneTree();
 
@@ -112,7 +112,6 @@ namespace fay
 		void PrintSceneTreeInternal(std::stringstream& out, const SceneNode* node);
 		static void TraverseRecursive(SceneNode* node, const SM::Matrix& parentWorld);
 		void ForEachMeshNodeRecursive(const SceneNode* node, const MeshVisitor& fn) const;
-		void ForEachLightNodeRecursive(const SceneNode* node, const LightVisitor& fn) const;
 
 	private:
 		std::unique_ptr<SceneNode> m_root;

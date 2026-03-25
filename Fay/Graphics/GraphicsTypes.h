@@ -135,25 +135,4 @@ namespace fay
 		nvrhi::BufferHandle     m_constantBuffer;
 		nvrhi::BindingSetHandle m_bindingSet;
 	};
-
-	struct MeshComponent
-	{
-		u32 MeshIndex = 0;  // index into Scene::Meshes
-	};
-
-	struct LightComponent
-	{
-		enum class Type { Directional, Point, Spot };
-		Type LightType = Type::Directional;
-
-		SM::Vector3 Color = { 1.0f, 1.0f, 1.0f };
-		f32 Intensity = 1.0f;
-
-		// Point / Spot
-		f32 Range = 10.0f;
-
-		// Spot only
-		f32 InnerConeAngle = 30.0f;  // degrees
-		f32 OuterConeAngle = 45.0f;  // degrees
-	};
 }

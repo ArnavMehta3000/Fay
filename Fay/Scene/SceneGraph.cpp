@@ -81,6 +81,11 @@ namespace fay
 	{
 		auto attachComponentInfo = [](std::stringstream& out, const SceneNode* node)
 		{
+			if (!node->HasAnyComponent())
+			{
+				return;
+			}
+
 			out << "[";
 
 			if (node->HasComponent<SceneMeshComponent>())
@@ -101,7 +106,7 @@ namespace fay
 			auto& children = node->GetChildren();
 			for (auto& child : children)
 			{
-				out << "\t";
+				out << "   ";
 				PrintSceneTreeInternal(out, child.get());
 			}			
 		}
@@ -132,20 +137,6 @@ namespace fay
 		for (auto& child : children)
 		{
 			ForEachMeshNodeRecursive(child.get(), fn);
-		}
-	}
-
-	void Scene::ForEachLightNodeRecursive(const SceneNode* node, const LightVisitor& fn) const
-	{
-		if (auto* lc = node->GetComponent<LightComponent>())
-		{
-			fn(*node, *lc, node->WorldMatrix);
-		}
-
-		const auto& children = node->GetChildren();
-		for (auto& child : children)
-		{
-			ForEachLightNodeRecursive(child.get(), fn);
 		}
 	}
 }
