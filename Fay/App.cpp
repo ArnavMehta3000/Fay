@@ -3,9 +3,10 @@
 #include "Common/Assert.h"
 #include "Common/Log.h"
 #include "Platform/Timer.h"
-#include <fstream>
 #include <SDL3/SDL.h>
 #include <nlohmann/json.hpp>
+
+import std;
 
 namespace fay
 {

@@ -2,8 +2,8 @@
 #include "Platform/Window.h"
 #include "Graphics/Camera.h"
 #include <SDL3/SDL.h>
-#include <algorithm>
-#include <numbers>
+
+import std;
 
 namespace fay
 {

@@ -1,5 +1,6 @@
 #include "Platform/FileReader.h"
-#include <fstream>
+
+import std;
 
 namespace fay
 {

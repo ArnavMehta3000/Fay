@@ -7,9 +7,8 @@
 #include "Common/Log.h"
 #include <nvrhi/validation.h>
 #include <SDL3/SDL_vulkan.h>
-#include <algorithm>
-#include <cstring>
-#include <sstream>
+
+import std;
 
 #undef min
 #undef max

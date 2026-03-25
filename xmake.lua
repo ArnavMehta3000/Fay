@@ -44,7 +44,8 @@ end
 
 target("Fay")
 	set_kind("binary")
-
+	
+	set_policy("build.c++.modules", true)
 	add_packages("nvrhi", "sdl3", "tracy", "fastgltf", "stb", "nlohmann_json")
 	add_deps("SimpleMath")
 	
