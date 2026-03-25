@@ -31,6 +31,10 @@ namespace fay
 		void CreateInputLayout();
 		void CreateConstantBuffers();
 		void CreateCBBindings();
+		void CreateMaterialBindingLayout();
+		void CreateFallbackTextures();
+
+		nvrhi::BindingSetHandle GetOrCreateMaterialBindingSet(const Material* material);
 
 	private:
 		// CB structs matching Common.hlsli
@@ -69,5 +73,15 @@ namespace fay
 		nvrhi::BufferHandle        m_objectCB;
 		nvrhi::BindingLayoutHandle m_bindingLayout;
 		nvrhi::BindingSetHandle    m_bindingSet;
+
+		nvrhi::BindingLayoutHandle m_materialBindingLayout;
+		std::unordered_map<const Material*, 
+			std::pair<nvrhi::BufferHandle, nvrhi::BindingSetHandle>> m_materialBindingSets;
+		
+		nvrhi::TextureHandle m_fallbackWhite;    // base color, occlusion
+		nvrhi::TextureHandle m_fallbackNormal;   // flat normal (0.5, 0.5, 1.0)
+		nvrhi::TextureHandle m_fallbackBlack;    // emissive
+		nvrhi::TextureHandle m_fallbackMR;       // metallic-roughness (roughness=1, metallic=0)
+		nvrhi::SamplerHandle m_fallbackSampler;
 	};
 }
