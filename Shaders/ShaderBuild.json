@@ -10,19 +10,19 @@
 	],
 	"entries": [
 		{
-			"source_file": "Mesh.hlsl",
-			"output_file": "MeshVS.cso",
+			"source_file": "GeometryPassVS.hlsl",
+			"output_file": "GeometryPassVS.cso",
 			"entry": "VSMain",
 			"target": "vs_6_0",
-			"defines": ["AS_VS=1"],
+			"defines": [],
 			"extra_args": []
 		},
 		{
-			"source_file": "Mesh.hlsl",
-			"output_file": "MeshPS.cso",
+			"source_file": "GeometryPassPS.hlsl",
+			"output_file": "GeometryPassPS.cso",
 			"entry": "PSMain",
 			"target": "ps_6_0",
-			"defines": ["AS_PS=1"]
+			"defines": []
 		}
 	]
 }

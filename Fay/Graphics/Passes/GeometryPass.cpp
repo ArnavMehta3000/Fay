@@ -93,9 +93,12 @@ namespace fay
 
 	void GeometryPass::LoadShaders()
 	{
+		ZoneScoped;
+
+		Log::Info("Loading Geometry Pass Shaders");
 		auto device = GetDevice();
 
-		FileReader::ReadResult result = FileReader::Read("Shaders/MeshVS.cso");
+		FileReader::ReadResult result = FileReader::Read("Shaders/GeometryPassVS.cso");
 		if (!result)
 		{
 			Log::Error("Failed to read MeshVS shader: {}", result.error());
@@ -107,7 +110,7 @@ namespace fay
 		desc.setDebugName("MeshVS").setEntryName("VSMain").setShaderType(nvrhi::ShaderType::Vertex);
 		m_vs = device->createShader(desc, data.data(), data.size());
 
-		result = FileReader::Read("Shaders/MeshPS.cso");
+		result = FileReader::Read("Shaders/GeometryPassPS.cso");
 		if (!result)
 		{
 			Log::Error("Failed to read MeshPS shader: {}", result.error());
@@ -146,7 +149,7 @@ namespace fay
 		};
 
 		if (!nvrhi::utils::CreateBindingSetAndLayout(
-			GetDevice(), nvrhi::ShaderType::All, 0, bsDesc,
+			GetDevice(), nvrhi::ShaderType::Vertex, 0, bsDesc,
 			m_bindingLayout, m_bindingSet))
 		{
 			Log::Error("Failed to create binding set/layout!");
@@ -161,7 +164,7 @@ namespace fay
 		//    s0..s4      = corresponding samplers
 
 		auto layoutDesc = nvrhi::BindingLayoutDesc()
-			.setVisibility(nvrhi::ShaderType::All)
+			.setVisibility(nvrhi::ShaderType::Pixel)
 			.setRegisterSpace(1)
 			.addItem(nvrhi::BindingLayoutItem::VolatileConstantBuffer(0));
 

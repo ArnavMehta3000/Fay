@@ -61,8 +61,10 @@ namespace fay
 
 			if (m_renderer->PreRender())
 			{
-				m_renderer->DoRenderPasses();  // Maybe rename this to RenderFrame?
-				Assert(m_renderer->PostRender());
+				m_renderer->DoRenderPasses();
+
+				[[maybe_unused]] bool postRenderResult = m_renderer->PostRender();
+				Assert(postRenderResult);
 			}
 			
 			::SDL_UpdateWindowSurface(m_window.GetSDL());
