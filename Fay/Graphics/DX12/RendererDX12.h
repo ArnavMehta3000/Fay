@@ -1,7 +1,5 @@
 #pragma once
-#include "Graphics/GraphicsConfig.h"
 
-#if FAY_HAS_D3D
 #include "Graphics/RendererBase.h"
 #include <nvrhi/d3d12.h>
 
@@ -55,4 +53,3 @@ namespace fay
 		bool                                            m_isTearingSupported = false;
 	};
 }
-#endif

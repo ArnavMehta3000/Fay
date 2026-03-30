@@ -1,50 +1,19 @@
 #include "Graphics/RendererBase.h"
-#include "Common/Log.h"
+
 #include "Common/Assert.h"
-#include "Platform/Window.h"
+#include "Common/Log.h"
 #include "Common/Profiling.h"
+#include "Graphics/DX12/RendererDX12.h"
+#include "Platform/Window.h"
 #include <nvrhi/utils.h>
 
-#if FAY_HAS_D3D
-#include "Graphics/DX12/RendererDX12.h"
-#endif
-
-#if FAY_HAS_VULKAN
-#include "Graphics/Vulkan/RendererVulkan.h"
-#endif
 
 namespace fay
 {
-	namespace
-	{
-		nvrhi::GraphicsAPI ToNvrhiGraphicsAPI(API api)
-		{
-			switch (api)
-			{
-			case API::D3D12: return nvrhi::GraphicsAPI::D3D12;
-			case API::Vulkan: return nvrhi::GraphicsAPI::VULKAN;
-			default:
-				nvrhi::utils::NotSupported();
-				return nvrhi::GraphicsAPI::D3D12;
-			}
-		}
-	}
-
-	Renderer* Renderer::Create(API api)
+	Renderer* Renderer::Create()
 	{
 		ZoneScoped;
-		switch (ToNvrhiGraphicsAPI(api))
-		{
-#if FAY_HAS_D3D
-		case nvrhi::GraphicsAPI::D3D12: return new RendererDX12();
-#endif
-#if FAY_HAS_VULKAN
-		case nvrhi::GraphicsAPI::VULKAN: return new RendererVulkan();
-#endif
-		default:
-			nvrhi::utils::NotSupported();
-			return nullptr;
-		}
+		return new RendererDX12();
 	}
 
 	bool Renderer::Init(const RendererInitInfo& info, Window& targetWindow)

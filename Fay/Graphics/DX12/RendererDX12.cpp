@@ -1,6 +1,5 @@
 #include "Graphics/DX12/RendererDX12.h"
 
-#if FAY_HAS_D3D
 #include "Platform/Window.h"
 #include "Common/Assert.h"
 #include "Common/Profiling.h"
@@ -488,4 +487,3 @@ namespace fay
 }
 
 #undef HR_RETURN
-#endif

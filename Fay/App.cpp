@@ -14,7 +14,7 @@ namespace fay
 
 	App::App(const App::Desc& desc)
 		: m_window(desc.WindowDesc)
-		, m_renderer(fay::Renderer::Create(desc.WindowDesc.Api))
+		, m_renderer(fay::Renderer::Create())
 		, m_scene(std::make_unique<Scene>())
 		, m_cameraController(m_camera, m_window)
 	{

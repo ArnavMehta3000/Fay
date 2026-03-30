@@ -1,30 +1,18 @@
 #pragma once
-#include <optional>
-#include <variant>
+#include "Common/Macros.h"
+#include "Common/Types.h"
+#include <d3dcommon.h>
+#include <dxgi1_6.h>
 #include <functional>
 #include <list>
 #include <nvrhi/nvrhi.h>
-#include "Common/Types.h"
-#include "Common/Macros.h"
-#include "Graphics/GraphicsConfig.h"
-
-#if FAY_HAS_D3D
-#include <d3dcommon.h>
-#include <dxgi1_6.h>
-#endif
-
-#if FAY_HAS_VULKAN
-#ifndef VULKAN_HPP_DISPATCH_LOADER_DYNAMIC
-#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
-#endif
-#include <vulkan/vulkan.hpp>
-#endif
+#include <optional>
+#include <variant>
 
 namespace fay
 {
     class Window;
     class Renderer;
-    enum class API : u8;
 
 	struct RendererInitInfo
 	{
@@ -37,7 +25,6 @@ namespace fay
         bool EnableComputeQueue         : 1 = false;
         bool EnableCopyQueue            : 1 = false;
         bool EnableVSync                : 1 = false;
-        bool EnableRayTracingExtensions : 1 = false;  // Only affects Vulkan
 
         nvrhi::Format SwapChainFormat = nvrhi::Format::SRGBA8_UNORM;
         nvrhi::Format DepthBufferFormat = nvrhi::Format::UNKNOWN;  // If unkown, then depth buffer is not created
@@ -49,22 +36,8 @@ namespace fay
         u32 SwapChainSampleCount           = 1;
         u32 SwapChainSampleQuality         = 0;
 
-#if FAY_HAS_D3D
-        DXGI_USAGE SwapChainUsage = DXGI_USAGE_SHADER_INPUT | DXGI_USAGE_RENDER_TARGET_OUTPUT;
+        DXGI_USAGE SwapChainUsage      = DXGI_USAGE_SHADER_INPUT | DXGI_USAGE_RENDER_TARGET_OUTPUT;
         D3D_FEATURE_LEVEL FeatureLevel = D3D_FEATURE_LEVEL_11_1;
-#endif
-
-#if FAY_HAS_VULKAN
-        std::vector<std::string> RequiredVulkanInstanceExtensions;
-        std::vector<std::string> RequiredVulkanLayers;
-        std::vector<std::string> OptionalVulkanInstanceExtensions;
-        std::vector<std::string> OptionalVulkanLayers;
-
-        std::vector<std::string> RequiredVulkanDeviceExtensions;
-        std::vector<std::string> OptionalVulkanDeviceExtensions;
-        std::vector<size_t> IgnoredVulkanValidationMessageLocations = { 0x13365b2 };
-        std::function<void(VkDeviceCreateInfo&)> VkDeviceCreateInfoCallback;
-#endif
 	};
 
     struct AdapterInfo
@@ -81,13 +54,7 @@ namespace fay
         std::optional<AdapterUUID> UUID;
         std::optional<AdapterLUID> LUID;
 
-#if FAY_HAS_D3D
         nvrhi::RefCountPtr<IDXGIAdapter> DXGIAdapter;
-#endif
-
-#if FAY_HAS_VULKAN
-        VkPhysicalDevice vkPhysicalDevice = nullptr;
-#endif
     };
 
     class IRenderer
@@ -144,7 +111,7 @@ namespace fay
         , public nvrhi::IMessageCallback
     {
     public:
-        static Renderer* Create(API api);
+        static Renderer* Create();
         virtual ~Renderer() = default;
 
         bool Init(const RendererInitInfo& info, Window& targetWindow) override final;

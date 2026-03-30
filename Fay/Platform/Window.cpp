@@ -3,7 +3,6 @@
 #include "Common/Assert.h"
 #include "Common/Profiling.h"
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_vulkan.h>
 
 namespace fay
 {
@@ -19,8 +18,7 @@ namespace fay
 			Assert(m_window);
 		}
 		
-		// Only init vulkan surface if we're using vulkan
-		u32 flags = m_desc.Api == API::Vulkan ? SDL_WINDOW_VULKAN : 0;
+		u32 flags = 0;
 		if (desc.IsResizeable)
 		{
 			flags |= SDL_WINDOW_RESIZABLE;
@@ -88,13 +86,4 @@ namespace fay
 			nullptr);
 	}
 #endif
-
-	bool Window::CreateVulkanSurface(void* instance, void* outSurface) const
-	{
-		return SDL_Vulkan_CreateSurface(
-			m_window,
-			*static_cast<VkInstance*>(instance),
-			nullptr,
-			static_cast<VkSurfaceKHR*>(outSurface));
-	}
 }

@@ -4,38 +4,16 @@
 #include "Common/Types.h"
 #include "Common/Macros.h"
 #include "Platform/IWindowEventHook.h"
-#include "Graphics/GraphicsConfig.h"
 
 struct SDL_Window;
 
 namespace fay
 {
-	enum class API : u8
-	{
-		Auto,
-		D3D12,
-		Vulkan
-	};
-
-	static constexpr inline API GetPlatformAPI(API api = API::Auto)
-	{
-		if (api == API::Auto)
-		{
-#if FAY_HAS_D3D
-			return API::D3D12;
-#else
-			return API::VULKAN;
-#endif
-		}
-		return api;
-	}
-
 	class Window
 	{
 	public:
 		struct Desc
 		{
-			API Api                  = API::Auto;
 			std::string Name         = "Fay Renderer";
 			std::pair<u32, u32> Size = { 1280, 720 };
 			bool  IsResizeable       = true;
@@ -56,8 +34,6 @@ namespace fay
 	#if FAY_OS_WINDOWS
 		void* GetHWND() const;
 	#endif
-
-	bool CreateVulkanSurface(void* instance, void* outSurface) const;
 
 	private:
 		SDL_Window* m_window;
