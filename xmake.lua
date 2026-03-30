@@ -32,6 +32,7 @@ add_repositories("MyRepo https://github.com/ArnavMehta3000/xmake-repo.git")
 
 add_requires("nvrhi", { configs = { validation = true, d3d12 = is_plat("windows"), } })
 add_requires("fastgltf")
+add_requires("imgui", { configs = { sdl3 = true, win32 = true } })
 add_requires("stb")
 add_requires("nlohmann_json")
 add_requires("libsdl3", { alias = "sdl3" })
@@ -43,7 +44,9 @@ target("Fay")
 	set_kind("binary")
 	
 	set_policy("build.c++.modules", true)
-	add_packages("nvrhi", "sdl3", "tracy", "fastgltf", "stb", "nlohmann_json")
+	add_packages(
+		"nvrhi", "sdl3", "tracy", "imgui",
+		"fastgltf", "stb", "nlohmann_json")
 	add_deps("SimpleMath")
 	
 	add_undefines("min", "max")

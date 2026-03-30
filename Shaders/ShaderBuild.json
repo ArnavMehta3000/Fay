@@ -22,7 +22,24 @@
 			"output_file": "GeometryPassPS.cso",
 			"entry": "PSMain",
 			"target": "ps_6_0",
-			"defines": []
-		}
+			"defines": [],
+			"extra_args": []
+		},
+		{
+			"source_file": "ImGuiVS.hlsl",
+			"output_file": "ImGuiVS.cso",
+			"entry": "VSMain",
+			"target": "vs_6_0",
+			"defines": [],
+			"extra_args": []
+		},
+    {
+      "source_file": "ImGuiPS.hlsl",
+      "output_file": "ImGuiPS.cso",
+      "entry": "PSMain",
+      "target": "ps_6_0",
+      "defines": [],
+      "extra_args": []
+    }
 	]
 }
