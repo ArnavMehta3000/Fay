@@ -263,13 +263,13 @@ namespace fay
 
 			for (i32 n = 0; n < drawData->CmdListsCount; n++)
 			{
-				const ImDrawList* cmdList = drawData->CmdLists[n];
+				const ImDrawList* drawList = drawData->CmdLists[n];
 
-				std::memcpy(vtxDst, cmdList->VtxBuffer.Data, cmdList->VtxBuffer.Size * sizeof(ImDrawVert));
-				std::memcpy(idxDst, cmdList->IdxBuffer.Data, cmdList->IdxBuffer.Size * sizeof(ImDrawIdx));
+				std::memcpy(vtxDst, drawList->VtxBuffer.Data, drawList->VtxBuffer.Size * sizeof(ImDrawVert));
+				std::memcpy(idxDst, drawList->IdxBuffer.Data, drawList->IdxBuffer.Size * sizeof(ImDrawIdx));
 
-				vtxDst += cmdList->VtxBuffer.Size;
-				idxDst += cmdList->IdxBuffer.Size;
+				vtxDst += drawList->VtxBuffer.Size;
+				idxDst += drawList->IdxBuffer.Size;
 			}
 
 			cmdList->writeBuffer(VertexBuffer, ImGuiVertexBuffer.data(), VertexBuffer->getDesc().byteSize);
@@ -277,6 +277,8 @@ namespace fay
 
 			return true;
 		}
+
+		return false;
 	}
 
 	bool ImGuiContext::ReallocateBuffer(nvrhi::BufferHandle& buffer, u64 requiredSize, u64 reallocateSize, bool isIndexBuffer)
