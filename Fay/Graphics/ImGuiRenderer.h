@@ -2,6 +2,7 @@
 #include "Graphics/RendererBase.h"
 #include <unordered_map>
 #include <vector>
+#include <memory>
 #include <imgui.h>
 
 namespace fay
@@ -47,6 +48,22 @@ namespace fay
 
 	class ImGuiRenderer : public IRenderPass
 	{
+	public:
+		explicit ImGuiRenderer(Renderer* renderer);
+		~ImGuiRenderer();
 
+		void UpdateFrame(f32 deltaTime);
+
+		virtual std::string_view GetName() const override { return "ImGuiRenderer"; }
+		virtual void OnRender(nvrhi::IFramebuffer* framebuffer) override;
+		virtual bool SupportsDepthBuffer() override { return false; }
+		virtual void OnBackBufferResizeEnd(u32, u32, u32) override {}
+
+	protected:
+		virtual void OnImGui() = 0;
+
+	protected:
+		std::unique_ptr<ImGuiContext> m_ctx;
+		bool m_imguiFrameOpened = false;
 	};
 }

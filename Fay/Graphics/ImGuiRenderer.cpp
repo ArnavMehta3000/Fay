@@ -341,4 +341,28 @@ namespace fay
 		BindingsCache[texture] = binding;
 		return binding;
 	}
+
+	ImGuiRenderer::ImGuiRenderer(Renderer* renderer)
+		: IRenderPass(renderer)
+		, m_ctx(std::make_unique<ImGuiContext>())
+	{
+		ImGui::CreateContext();
+		m_ctx->Init(GetDevice());
+	}
+	
+	ImGuiRenderer::~ImGuiRenderer()
+	{
+		ImGui::DestroyContext();
+	}
+	
+	void ImGuiRenderer::UpdateFrame(f32 deltaTime)
+	{
+		if (m_imguiFrameOpened)
+		{
+			ImGui::EndFrame();
+			m_imguiFrameOpened = false;
+		}
+
+		m_ctx->UpdateFontTexture();
+	}
 }
