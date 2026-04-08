@@ -2,6 +2,7 @@
 #include "Platform/FileReader.h"
 #include "Common/Log.h"
 #include "Common/Profiling.h"
+#include "imgui.h"
 
 import std;
 
@@ -88,7 +89,7 @@ namespace fay
 					CmdList->setPushConstants(&invDisplaySize, sizeof(invDisplaySize));
 					CmdList->drawIndexed(drawArgs);
 				}
-				
+
 				idxOffset += cmd->ElemCount;
 			}
 
@@ -307,14 +308,14 @@ namespace fay
 
 		return true;
 	}
-	
+
 	nvrhi::IGraphicsPipeline* ImGuiContext::GetPSO(const nvrhi::FramebufferInfo& info)
 	{
 		if (PSO)
 		{
 			return PSO;
 		}
-		
+
 		PSO = Device->createGraphicsPipeline(BasePSODesc, info);
 		return PSO;
 	}
@@ -349,12 +350,12 @@ namespace fay
 		ImGui::CreateContext();
 		m_ctx->Init(GetDevice());
 	}
-	
+
 	ImGuiRenderer::~ImGuiRenderer()
 	{
 		ImGui::DestroyContext();
 	}
-	
+
 	void ImGuiRenderer::UpdateFrame(f32 deltaTime)
 	{
 		if (m_imguiFrameOpened)
@@ -364,5 +365,27 @@ namespace fay
 		}
 
 		m_ctx->UpdateFontTexture();
+
+		const auto [w, h] = GetRenderer()->GetInitInfo().BackBufferSize;
+
+		ImGuiIO io = ImGui::GetIO();
+		io.DisplaySize = ImVec2((f32)w, (f32)h);
+		io.DeltaTime = deltaTime;
+		io.MouseDrawCursor = false;
+
+		ImGui::NewFrame();
+
+		m_imguiFrameOpened = true;
+	}
+
+	void ImGuiRenderer::OnRender(nvrhi::IFramebuffer* framebuffer)
+	{
+	    if (!m_ctx) return;
+
+		OnImGui();
+
+		ImGui::Render();
+		m_ctx->OnRender(framebuffer);
+		m_imguiFrameOpened = false;
 	}
 }

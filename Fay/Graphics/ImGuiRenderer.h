@@ -15,7 +15,7 @@ namespace fay
 		nvrhi::ShaderHandle VertexShader;
 		nvrhi::ShaderHandle PixelShader;
 		nvrhi::InputLayoutHandle ShaderAttribLayout;
-		
+
 		nvrhi::TextureHandle FontTexture;
 		nvrhi::SamplerHandle FontSampler;
 
@@ -34,12 +34,12 @@ namespace fay
 		void Init(nvrhi::IDevice* device);
 		void OnRender(nvrhi::IFramebuffer* framebuffer);
 		void OnResizeBegin();
+		bool UpdateFontTexture();
 
 	private:
 		void LoadShaders();
 		void CreateInputLayout();
 		void CreatePSO();
-		bool UpdateFontTexture();
 		bool UpdateGeometry(nvrhi::ICommandList* cmdList);
 		bool ReallocateBuffer(nvrhi::BufferHandle& buffer, u64 requiredSize, u64 reallocateSize, bool isIndexBuffer);
 		nvrhi::IGraphicsPipeline* GetPSO(const nvrhi::FramebufferInfo& info);
